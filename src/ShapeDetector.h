@@ -61,6 +61,11 @@ class ShapeDetector
   protected:
 
 	void drawDebug(bool zoom);
+	void mouseMoved(ofMouseEventArgs& args);
+	void mouseDragged(ofMouseEventArgs& args);
+	void mousePressed(ofMouseEventArgs& args);
+	void mouseReleased(ofMouseEventArgs& args);
+	bool bDraggingSlider;
 
 	ofxKinectCommonBridge kinect;
 	int depthImageWidth;
@@ -89,6 +94,7 @@ class ShapeDetector
 	void createColorMask(ShapeColor colorIndex);
 	void createColorMasks();
 	void findShapes();
+
 
 	cv::Mat hsvImage;
 	cv::Mat tempThresh;

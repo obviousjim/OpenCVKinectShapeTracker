@@ -1,7 +1,8 @@
 #include "ShapeDetector.h"
-
 //--------------------------------------------------------------
 void ShapeDetector::setup(){
+	
+	bDraggingSlider = false;
 
 	//Initialize the sensors with a depth and color image channel
 	kinect.initSensor();
@@ -231,6 +232,97 @@ void ShapeDetector::drawDebug(bool zoom){
 		zoomFbo.end();
 	}
 }
+
+void ShapeDetector::mouseMoved(ofMouseEventArgs& args){
+}
+
+void ShapeDetector::mouseDragged(ofMouseEventArgs& args){
+	ofVec2f samplePoint(args.x,args.y);
+	for(int s = 0; s < 2; s++){
+		for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
+			ColorSlider& slider = colorSamples[i][s];	
+			if(slider.samplePos.inside(samplePoint)){
+				memset(&sampleConnectors[0],0,sizeof(bool)*SHAPE_COLOR_COUNT);
+				sampleConnectors[i] = true;
+				sampleColorIndex = s;
+			}
+			else if(slider.hpos.inside(samplePoint)){
+				slider.hueRange = ofMap(args.x,slider.hpos.getMinX(),slider.hpos.getMaxX(), 1, 50, true);
+			}
+			else if(slider.spos.inside(samplePoint)){
+				slider.saturationRange = ofMap(args.x,slider.hpos.getMinX(),slider.hpos.getMaxX(), 1, 50, true);
+			}
+			else if(slider.vpos.inside(samplePoint)){
+				slider.valueRange = ofMap(args.x,slider.hpos.getMinX(),slider.hpos.getMaxX(), 1, 50, true);
+			}
+		}
+	}
+}
+
+void ShapeDetector::mousePressed(ofMouseEventArgs& args){
+
+	ofVec2f samplePoint(args.x,args.y);
+	ofRectangle colorWindow(0, 0, depthColors.getWidth(), depthColors.getHeight());
+	ofRectangle zoomWindow(0, depthColors.getHeight(), depthColors.getWidth(), depthColors.getHeight());
+
+	if(colorWindow.inside(samplePoint)){
+		if(args.button == 0){
+			for(int s = 0; s < 2; s++){
+				for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
+					if(sampleConnectors[i] && sampleColorIndex == s){
+						ofColor sampleColor = depthColors.getColor(args.x,args.y);
+						colorSamples[i][s].color = sampleColor;
+					}
+				}
+			}
+		}
+		else{
+			zoomPoint = samplePoint - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
+		}
+	}
+	else if(zoomWindow.inside(samplePoint) && args.button == 0){
+		ofVec2f samplePointScaled = zoomPoint + (samplePoint - zoomWindow.getTopLeft()) / 5.0;
+		for(int s = 0; s < 2; s++){
+			for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
+				if(sampleConnectors[i] && sampleColorIndex == s){
+					ofColor sampleColor = depthColors.getColor(samplePointScaled.x,samplePointScaled.y);
+					colorSamples[i][s].color = sampleColor;
+				}
+			}
+		}
+	}
+	else {
+		for(int s = 0; s < 2; s++){
+			for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
+				
+				ColorSlider& slider = colorSamples[i][s];
+			
+				if(slider.samplePos.inside(samplePoint)){
+					memset(&sampleConnectors[0],0,sizeof(bool)*SHAPE_COLOR_COUNT);
+					sampleConnectors[i] = true;
+					sampleColorIndex = s;
+				}
+				else if(slider.hpos.inside(samplePoint)){
+					slider.hueRange = ofMap(args.x,slider.hpos.getMinX(),slider.hpos.getMaxX(), 1, 10, true);
+					bDraggingSlider = true;
+				}
+				else if(slider.spos.inside(samplePoint)){
+					slider.saturationRange = ofMap(args.x,slider.hpos.getMinX(),slider.hpos.getMaxX(), 1, 50, true);
+					bDraggingSlider = true;
+				}
+				else if(slider.vpos.inside(samplePoint)){
+					slider.valueRange = ofMap(args.x,slider.hpos.getMinX(),slider.hpos.getMaxX(), 1, 50, true);
+					bDraggingSlider = true;
+				}
+			}
+		}
+	}
+}
+
+void ShapeDetector::mouseReleased(ofMouseEventArgs& args){
+	bDraggingSlider = false;
+}
+
 
 void ShapeDetector::createColorMasks(){
 	for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
@@ -517,6 +609,7 @@ void ShapeDetector::findShapes(){
 	}
 	*/
 }
+
 
 void ShapeDetector::exit(){
 	saveColors();
