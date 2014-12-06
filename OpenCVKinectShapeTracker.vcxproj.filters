@@ -10,10 +10,28 @@
     <ClCompile Include="src\ShapeDetector.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\addons\ofxImageSegmentation\src\ofxImageSegmentation.cpp">
+      <Filter>addons\ofxImageSegmentation\src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
       <UniqueIdentifier>{d8376475-7454-4a24-b08a-aac121d3ad6f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons">
+      <UniqueIdentifier>{b1051ff3-013a-402b-8382-6dc5ab3f85b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxImageSegmentation">
+      <UniqueIdentifier>{2947f7aa-475b-4011-ab13-bd9cd84a2a82}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxImageSegmentation\src">
+      <UniqueIdentifier>{171e38a9-3527-4ab9-94d6-7870b088852f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxImageSegmentation\libs">
+      <UniqueIdentifier>{f2ed36f0-31b4-46f5-8798-8b1d1d3e5e81}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="addons\ofxImageSegmentation\libs\egs">
+      <UniqueIdentifier>{3c0b0965-230f-4d1a-b437-f5a267ad8210}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -22,6 +40,39 @@
     </ClInclude>
     <ClInclude Include="src\ShapeDetector.h">
       <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\convolve.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\disjoint-set.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\filter.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\image.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\imconv.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\imutil.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\misc.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\pnmfile.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\segment-graph.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\segment-image.h">
+      <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\src\ofxImageSegmentation.h">
+      <Filter>addons\ofxImageSegmentation\src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

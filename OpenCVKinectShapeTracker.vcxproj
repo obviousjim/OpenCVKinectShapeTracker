@@ -64,7 +64,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;..\..\..\addons\ofxImageSegmentation\libs\egs;..\..\..\addons\ofxImageSegmentation\src</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -81,7 +81,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);src;..\..\..\addons\ofxImageSegmentation\libs\egs;..\..\..\addons\ofxImageSegmentation\src</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
     </ClCompile>
     <Link>
@@ -96,11 +96,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\..\addons\ofxImageSegmentation\src\ofxImageSegmentation.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="src\ShapeDetector.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\convolve.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\disjoint-set.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\filter.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\image.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\imconv.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\imutil.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\misc.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\pnmfile.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\segment-graph.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\segment-image.h" />
+    <ClInclude Include="..\..\..\addons\ofxImageSegmentation\src\ofxImageSegmentation.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="src\ShapeDetector.h" />
   </ItemGroup>
