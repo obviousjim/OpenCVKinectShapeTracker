@@ -86,7 +86,7 @@ void ShapeDetector::draw(){
 	drawDebug(false);
 	drawDebug(true);
 
-	zoomFbo.draw(imageWidth,imageHeight);
+	zoomFbo.draw(imageWidth,0);
 
 	ofPushStyle();
 	for(int s = 0; s < 2; s++){
@@ -137,6 +137,7 @@ void ShapeDetector::draw(){
 
 void ShapeDetector::drawDebug(bool zoom){
 	ofPushStyle();
+
 	if(zoom){
 		zoomFbo.begin();
 		ofClear(0,0,0);
@@ -148,7 +149,7 @@ void ShapeDetector::drawDebug(bool zoom){
 	ofPushStyle();
 	ofEnableBlendMode(OF_BLENDMODE_ADD);
 	
-	if(depthColors.isAllocated() && depthColors.getWidth() > 0){ 
+	if(depthColors.isAllocated()){ 
 		depthColors.draw(0,0);
 	}
 
@@ -322,7 +323,6 @@ void ShapeDetector::mousePressed(ofMouseEventArgs& args){
 void ShapeDetector::mouseReleased(ofMouseEventArgs& args){
 	bDraggingSlider = false;
 }
-
 
 void ShapeDetector::createColorMasks(){
 	for(int i = 0; i < SHAPE_COLOR_COUNT; i++){

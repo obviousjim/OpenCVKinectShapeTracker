@@ -58,13 +58,14 @@ class ShapeDetector
 	void draw();
 	void exit();
 
-  protected:
-
-	void drawDebug(bool zoom);
 	void mouseMoved(ofMouseEventArgs& args);
 	void mouseDragged(ofMouseEventArgs& args);
 	void mousePressed(ofMouseEventArgs& args);
 	void mouseReleased(ofMouseEventArgs& args);
+
+  protected:
+
+	void drawDebug(bool zoom);
 	bool bDraggingSlider;
 
 	ofxKinectCommonBridge kinect;

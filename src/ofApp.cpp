@@ -5,7 +5,10 @@ void ofApp::setup(){
 	ofSetVerticalSync(true);
 	ofBackground(0);
 
+
 	detector.setup();
+	ofRegisterMouseEvents(&detector);
+
 }
 
 //--------------------------------------------------------------
@@ -62,3 +65,10 @@ void ofApp::gotMessage(ofMessage msg){
 void ofApp::dragEvent(ofDragInfo dragInfo){ 
 
 }
+
+//--------------------------------------------------------------
+void ofApp::exit(){
+	ofUnregisterMouseEvents(&detector);
+	detector.exit();
+}
+
