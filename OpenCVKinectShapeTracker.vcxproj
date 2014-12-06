@@ -33,12 +33,14 @@
     <Import Project="..\..\..\libs\openFrameworksCompiled\project\vs\openFrameworksRelease.props" />
     <Import Project="..\..\..\addons\ofxKinectV2\ofxKinectV2Lib\ofxKinectV2x86.props" />
     <Import Project="..\..\..\addons\ofxCv\ofxCvLib\ofxCv.props" />
+    <Import Project="..\..\..\addons\ofxUI\ofxUILib\ofxUI.props" />
   </ImportGroup>
   <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
     <Import Project="..\..\..\libs\openFrameworksCompiled\project\vs\openFrameworksDebug.props" />
     <Import Project="..\..\..\addons\ofxKinectV2\ofxKinectV2Lib\ofxKinectV2x86.props" />
     <Import Project="..\..\..\addons\ofxCv\ofxCvLib\ofxCv.props" />
+    <Import Project="..\..\..\addons\ofxUI\ofxUILib\ofxUI.props" />
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -108,6 +110,9 @@
     </ProjectReference>
     <ProjectReference Include="..\..\..\addons\ofxKinectV2\ofxKinectV2Lib\ofxKinectV2Lib.vcxproj">
       <Project>{0438d57a-53a4-4fc8-927d-4f639080d15a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\addons\ofxUI\ofxUILib\ofxUILib.vcxproj">
+      <Project>{641db976-e775-4d72-86eb-897e2c4a0eee}</Project>
     </ProjectReference>
     <ProjectReference Include="..\..\..\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
       <Project>{5837595d-aca9-485c-8e76-729040ce4b0b}</Project>
