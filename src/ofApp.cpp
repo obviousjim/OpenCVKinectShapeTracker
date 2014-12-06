@@ -5,10 +5,8 @@ void ofApp::setup(){
 	ofSetVerticalSync(true);
 	ofBackground(0);
 
-
 	detector.setup();
 	ofRegisterMouseEvents(&detector);
-
 }
 
 //--------------------------------------------------------------
@@ -23,7 +21,9 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
-
+	if(key == ' '){
+		detector.findShapes();
+	}
 }
 
 //--------------------------------------------------------------

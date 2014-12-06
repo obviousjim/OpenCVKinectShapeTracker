@@ -63,6 +63,8 @@ class ShapeDetector
 	void mousePressed(ofMouseEventArgs& args);
 	void mouseReleased(ofMouseEventArgs& args);
 
+	void findShapes();
+
   protected:
 
 	void drawDebug(bool zoom);
@@ -94,25 +96,20 @@ class ShapeDetector
 
 	void createColorMask(ShapeColor colorIndex);
 	void createColorMasks();
-	void findShapes();
-
 
 	cv::Mat hsvImage;
 	cv::Mat tempThresh;
 	ofImage depthColors;
-	ofShortImage background;
-	ofShortImage scanScene;
-	ofShortImage thresholdedScene;
 	ofPixels contourPix;
 
 	ofFbo zoomFbo;
 	ofVec2f zoomPoint;
 
-	vector<bool>sampleConnectors;
+	vector<bool> sampleConnectors;
 	vector< vector<ColorSlider> > colorSamples;
 	vector<ofImage> colorMasks;
 	vector<ofImage> maskedDepthColors;
-	vector<ofFloatImage> colorDepthCompositeMask;
+	vector<ofShortImage> colorDepthCompositeMask;
 	vector<ShapeContour> contours;
 	vector<ColorSlider> colorSliders;
 

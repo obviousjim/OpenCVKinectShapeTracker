@@ -15,9 +15,6 @@ void ShapeDetector::setup(){
 
 	depthColors.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
 
-	background.allocate(		depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
-	thresholdedScene.allocate(	depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
-	scanScene.allocate(			depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
 	contourPix.allocate(		depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
 	depthColors.allocate(		depthImageWidth, depthImageHeight, OF_IMAGE_COLOR);
 
@@ -31,7 +28,6 @@ void ShapeDetector::setup(){
 		colorMasks[i].allocate(depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
 		maskedDepthColors[i].allocate(depthImageWidth, depthImageHeight, OF_IMAGE_COLOR);
 		colorDepthCompositeMask[i].allocate(depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
-
 		colorSamples[i].resize(2); //two sliders per color
 	}
 
@@ -122,10 +118,10 @@ void ShapeDetector::draw(){
 			if(sampleConnectors[i] && sampleColorIndex == s){
 				ofSetColor(0);
 //				ofDrawBitmapString( CurioShape::GetStringForColor((ShapeColor)i), colorRect.getBottomLeft() + ofVec2f(5,-5) );
-				ofDrawBitmapString( ofToString(i), colorRect.getBottomLeft() + ofVec2f(5,-5) );
+				ofDrawBitmapString( "COLOR " + ofToString(i), colorRect.getBottomLeft() + ofVec2f(5,-5) );
 				ofSetColor(255);
 //				ofDrawBitmapString( CurioShape::GetStringForColor((ShapeColor)i), colorRect.getBottomLeft() + ofVec2f(6,-6) );
-				ofDrawBitmapString( ofToString(i), colorRect.getBottomLeft() + ofVec2f(6,-6) );
+				ofDrawBitmapString( "COLOR " + ofToString(i), colorRect.getBottomLeft() + ofVec2f(6,-6) );
 			}
 			ofPopStyle();
 			colorRect.y += 50;
@@ -158,7 +154,7 @@ void ShapeDetector::drawDebug(bool zoom){
 			maskedDepthColors[i].isAllocated() && 
 			maskedDepthColors[i].getWidth() > 0)
 		{
-			maskedDepthColors[i].draw(depthColors.getWidth(),0);
+			maskedDepthColors[i].draw(0,depthColors.getHeight());
 		}
 	}
 	
@@ -222,7 +218,6 @@ void ShapeDetector::drawDebug(bool zoom){
 					ofDrawBitmapString(debugString, contour.circlePosition + ofVec2f(contour.circleRadius-.2,contour.circleRadius+.2));
 
 				}
-
 			}
 		}
 	}
@@ -243,7 +238,8 @@ void ShapeDetector::mouseDragged(ofMouseEventArgs& args){
 		for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
 			ColorSlider& slider = colorSamples[i][s];	
 			if(slider.samplePos.inside(samplePoint)){
-				memset(&sampleConnectors[0],0,sizeof(bool)*SHAPE_COLOR_COUNT);
+				for(int sc = 0; sc < SHAPE_COLOR_COUNT; sc++) 
+					sampleConnectors[sc] = false;
 				sampleConnectors[i] = true;
 				sampleColorIndex = s;
 			}
@@ -264,7 +260,7 @@ void ShapeDetector::mousePressed(ofMouseEventArgs& args){
 
 	ofVec2f samplePoint(args.x,args.y);
 	ofRectangle colorWindow(0, 0, depthColors.getWidth(), depthColors.getHeight());
-	ofRectangle zoomWindow(0, depthColors.getHeight(), depthColors.getWidth(), depthColors.getHeight());
+	ofRectangle zoomWindow(depthColors.getWidth(), 0, depthColors.getWidth(), depthColors.getHeight());
 
 	if(colorWindow.inside(samplePoint)){
 		if(args.button == 0){
@@ -299,7 +295,8 @@ void ShapeDetector::mousePressed(ofMouseEventArgs& args){
 				ColorSlider& slider = colorSamples[i][s];
 			
 				if(slider.samplePos.inside(samplePoint)){
-					memset(&sampleConnectors[0],0,sizeof(bool)*SHAPE_COLOR_COUNT);
+					for(int sc = 0; sc < SHAPE_COLOR_COUNT; sc++) 
+						sampleConnectors[sc] = false;
 					sampleConnectors[i] = true;
 					sampleColorIndex = s;
 				}
@@ -387,7 +384,7 @@ void ShapeDetector::findShapes(){
 		colorDepthCompositeMask[shapeColor].getPixelsRef().set(0);
 
 		//copy in the colors over the back scene
-		ofxCv::toCv(scanScene).copyTo(ofxCv::toCv(colorDepthCompositeMask[shapeColor]), ofxCv::toCv(colorMasks[shapeColor]));		
+		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo(ofxCv::toCv(colorDepthCompositeMask[shapeColor]), ofxCv::toCv(colorMasks[shapeColor]));		
 		//getPixelRange(colorDepthCompositeMask[ShapeColor].getPixelsRef(), minScanDistance, maxScanDistance, curPix);
 		ofxCv::toCv(colorDepthCompositeMask[shapeColor]).convertTo(ofxCv::toCv(contourPix), CV_8U);
 
