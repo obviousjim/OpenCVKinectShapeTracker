@@ -4,7 +4,7 @@ void ShapeDetector::setup(){
 
 	//Initialize the sensors with a depth and color image channel
 	kinect.initSensor();
-	kinect.initDepthStream(true);
+	kinect.initDepthStream();
 	kinect.initColorStream();
 	kinect.start();
 	
@@ -83,16 +83,6 @@ void ShapeDetector::draw(){
 		segmentationKey.draw(depthImageWidth,0);
 	}
 
-	//draw backdrop for contours below
-	if(showAllContours){
-		if(segmentedColorFrame.isAllocated()){
-			segmentedColorFrame.draw(0,depthImageHeight);
-		}				
-	}
-	else if(currentSelectedContour != -1){
-		contours[ validContours[currentSelectedContour] ].segmentedColorImage.draw(0,depthImageHeight);
-	}
-
 	//draw the full zoomed out left panel
 	drawDebug(false);
 	//then draw a detail view into zoomFbo
@@ -113,14 +103,23 @@ void ShapeDetector::drawDebug(bool zoom){
 		ofScale(5,5);
 		ofTranslate(-zoomPoint.x, -zoomPoint.y);
 	}
-
-
-	if(!zoom){
+	else{
 		ofPushMatrix();
-		//draw over the bottom right panel
+		//draw over the bottom panel if we aren't drawing to the zoom texture
 		ofTranslate(0,depthImageHeight);	
 	}
 
+	//draw backdrop for contours below
+	if(showAllContours){
+		if(segmentedColorFrame.isAllocated()){
+			segmentedColorFrame.draw(0,0);
+		}				
+	}
+	else if(currentSelectedContour != -1){
+		contours[ validContours[currentSelectedContour] ].segmentedColorImage.draw(0,0);
+	}
+
+	//overlay with contours
 	if(showAllContours){
 		for(int i = 0; i < validContours.size(); i++){
 			drawContour(contours[ validContours[i] ], previewStats && zoom);
@@ -133,6 +132,7 @@ void ShapeDetector::drawDebug(bool zoom){
 	}
 
 	ofPopMatrix();
+
 	if(zoom){
 		zoomFbo.end();
 	}
@@ -226,7 +226,9 @@ void ShapeDetector::findShapes(){
 		contourFinder.setAutoThreshold(false);
 		contourFinder.setMinArea(minArea);
 		contourFinder.setMaxArea(maxArea);
-		contourFinder.findContours(ofxCv::toCv(imageSegmentation.getSegmentMask(segment)));
+		ofPixels mask = imageSegmentation.getSegmentMask(segment);
+		cv::Mat cvmask = ofxCv::toCv(mask);
+		contourFinder.findContours(cvmask);
 
 		if(contourFinder.getContours().size() == 0){
 			ofLogError("ShapeDetector::findShapes") << "No contours in segment";
@@ -237,12 +239,14 @@ void ShapeDetector::findShapes(){
 			ofLogError("ShapeDetector::findShapes") << "Multiple contours in segment. only looking at first";
 		}
 		
+		//ofxCv::invert( cvmask );
+
 		contour.segmentedColorImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
-		ofxCv::toCv(segmentedColorFrame).copyTo( ofxCv::toCv(contour.segmentedColorImage), ofxCv::toCv(imageSegmentation.getSegmentMask(segment)) ); 
+		ofxCv::toCv(segmentedColorFrame).copyTo( ofxCv::toCv(contour.segmentedColorImage), cvmask ); 
 		contour.segmentedColorImage.update();
 
 		contour.segmentedDepthImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_GRAYSCALE);
-		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(contour.segmentedDepthImage), ofxCv::toCv(imageSegmentation.getSegmentMask(segment)) ); 
+		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(contour.segmentedDepthImage), cvmask ); 
 		contour.segmentedDepthImage.update();
 
 		contour.contour = contourFinder.getPolyline(0);

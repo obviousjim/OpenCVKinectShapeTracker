@@ -38,9 +38,6 @@
     <ClInclude Include="src\ofApp.h">
       <Filter>src</Filter>
     </ClInclude>
-    <ClInclude Include="src\ShapeDetector.h">
-      <Filter>src</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\addons\ofxImageSegmentation\libs\egs\convolve.h">
       <Filter>addons\ofxImageSegmentation\libs\egs</Filter>
     </ClInclude>
@@ -73,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\addons\ofxImageSegmentation\src\ofxImageSegmentation.h">
       <Filter>addons\ofxImageSegmentation\src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\ShapeDetector.h">
+      <Filter>src</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

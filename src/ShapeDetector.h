@@ -8,9 +8,13 @@
 #include "ofxImageSegmentation.h"
 
 //TODO 
+//-- fix masks
+
 //-- add filters
-//	-- uncompact contours
+//	-- compactness of contours
 //-- show stats of contours
+//-- auto zoom when showing just one contour
+//-- show zoom rectangle when showing all contours
 //-- add instructions to interface
 
 //OPTIMIZATIONS
