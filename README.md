@@ -28,9 +28,13 @@ NOTE: this example is currently Windows only becaue of Kinect Common Bridge depe
 4. Opent the .sln file and build and go
 
 ### Credits
-This example was created by (James George)[http://jamesgeorge.org] for the [Curio Aquarium](http://curioaquarium.co) project, with financial support and encouragement from the Kinect For Windows team. 
+This example was created by [James George](http://jamesgeorge.org) for the [Curio Aquarium](http://curioaquarium.co) project, with financial support and encouragement from the Kinect For Windows team. 
 
-ofxUI is originally by Reza Ali; ofxCv by Kyle McDonald; ofxImageSegmentation by James George based on [this example](http://cs.brown.edu/~pff/segment/)
+ofxUI is by [Reza Ali](http://www.syedrezaali.com/)
+
+ofxCv is by [Kyle McDonald](http://kylemcdonald.net/)
+
+ofxImageSegmentation by James George based on [this example](http://cs.brown.edu/~pff/segment/)
 
 
 
