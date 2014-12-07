@@ -6,7 +6,10 @@ void ofApp::setup(){
 	ofBackground(0);
 
 	detector.setup();
+
 	ofRegisterMouseEvents(&detector);
+	ofRegisterKeyEvents(&detector);
+
 }
 
 //--------------------------------------------------------------
@@ -69,6 +72,7 @@ void ofApp::dragEvent(ofDragInfo dragInfo){
 //--------------------------------------------------------------
 void ofApp::exit(){
 	ofUnregisterMouseEvents(&detector);
+	ofUnregisterKeyEvents(&detector);
 	detector.exit();
 }
 

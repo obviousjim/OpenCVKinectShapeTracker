@@ -25,8 +25,17 @@
 //-- optimize kinect
 //-- optimize image segmenter
 
-struct ShapeContour {
-	
+class ShapeContour {
+  public:
+	ShapeContour(){
+		valid = false;
+		contourArea = 0;
+		circleRadius = 0;
+		rectMaxSide = 0;
+		compactness = false;
+		depthPosition = false;
+	}
+
 	bool valid;
 	ofPolyline contour;	
 	ofImage segmentedDepthImage;
@@ -43,7 +52,6 @@ struct ShapeContour {
 
 	float compactness;
 	float depthPosition;
-
 };
 
 class ShapeDetector
@@ -59,22 +67,38 @@ class ShapeDetector
 	void mousePressed(ofMouseEventArgs& args);
 	void mouseReleased(ofMouseEventArgs& args);
 
+	void keyPressed(ofKeyEventArgs& args);
+	void keyReleased(ofKeyEventArgs& args);
+
 	void findShapes();
 
   protected:
 
 	vector<ShapeContour> contours;
-	int currentSelectedContour;
 	ofxKinectCommonBridge kinect;
 	ofxImageSegmentation imageSegmentation;
 
-	void drawDebug(bool zoom);
+	ofImage depthColors;
+	ofImage segmentedDepthColors;
+
+	ofFbo zoomFbo;
+	ofVec2f zoomPoint;
+
 	int depthImageWidth;
 	int depthImageHeight;
+
+	void drawDebug(bool zoom);
+	//updates the current list of contours based on any changes to the filter settings
+	void revalidateContours();
 
 	ofxUISuperCanvas* gui;
 	float minArea;
 	float maxArea;
+	float minCompactness;
+
+	//previewing contours one at a time
+	vector<int> validContours;
+	int currentSelectedContour;
 
 	//visualization parameters
 	bool showAllContours;
@@ -83,13 +107,6 @@ class ShapeDetector
 	bool previewCircleFit;
 	bool previewStats;
 
-	void createDepthMasks();
-
-	ofImage depthColors;
-	ofImage segmentedDepthColors;
-
-	ofFbo zoomFbo;
-	ofVec2f zoomPoint;
-
+	//void createDepthMasks();
 	string getSettingsFilename();
 };

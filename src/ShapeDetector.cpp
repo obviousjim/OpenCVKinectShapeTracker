@@ -1,91 +1,78 @@
 #include "ShapeDetector.h"
 //--------------------------------------------------------------
 void ShapeDetector::setup(){
-	
-//	bDraggingSlider = false;
 
 	//Initialize the sensors with a depth and color image channel
 	kinect.initSensor();
 	kinect.initDepthStream(true);
 	kinect.initColorStream();
 	kinect.start();
+	
+	currentSelectedContour = -1;
 
 	depthImageWidth  = kinect.getDepthPixelsRef().getWidth(); 
 	depthImageHeight = kinect.getDepthPixelsRef().getHeight();
 
+	zoomFbo.allocate(depthImageWidth,depthImageHeight,GL_RGB);
 	depthColors.allocate(depthImageWidth, depthImageHeight,OF_IMAGE_COLOR);
-//	contourPix.allocate( depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
 
-//	sampleConnectors.resize(SHAPE_COLOR_COUNT);
-//	colorSamples.resize(SHAPE_COLOR_COUNT);
-	//colorMasks.resize(SHAPE_COLOR_COUNT);
-	//maskedDepthColors.resize(SHAPE_COLOR_COUNT);
-	//colorDepthCompositeMask.resize(SHAPE_COLOR_COUNT);
-
-	//for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
-//		colorMasks[i].allocate(depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
-//		maskedDepthColors[i].allocate(depthImageWidth, depthImageHeight, OF_IMAGE_COLOR);
-//		colorDepthCompositeMask[i].allocate(depthImageWidth, depthImageHeight, OF_IMAGE_GRAYSCALE);
-//		colorSamples[i].resize(2); //two sliders per color
-//	}
-
-	gui = new ofxUISuperCanvas("SHAPEGUI", 200,0,200,700);
-	gui->addRangeSlider("DEPTH RANGE",500,900,&minScanDistance,&maxScanDistance);
+	gui = new ofxUISuperCanvas("SHAPEGUI", 200, 0, 200, 700);
+	gui->addLabel("FILTERS");
 	gui->addSlider("MIN AREA", 0, 100, &minArea);
 	gui->addSlider("MAX AREA", 0, 500, &maxArea);
-//	gui->addSlider("SHIFT X", -10, 10, &shift.x);
-//	gui->addSlider("SHIFT Y", -10, 10, &shift.y);
-	gui->addSpacer();
+	gui->addSlider("MIN COMPACTNESS", 0, 1.0, &minCompactness);
+
+	gui->addLabel("PREVIEW OPTIONS");
 	gui->addToggle("PREVIEW ELLIPSE",&previewEllipseFit);
 	gui->addToggle("PREVIEW RECT",&previewRectFit);
 	gui->addToggle("PREVIEW CIRCLE", &previewCircleFit);
 	gui->addToggle("PREVIEW STATS", &previewStats);
-	gui->addSpacer();
+
+	gui->addLabel("SEGMENTATION PARAMETERS");
 	gui->addSlider("SIGMA", 0, 2.0, &imageSegmentation.sigma);
 	gui->addSlider("K", 0, 500, &imageSegmentation.k);
-	gui->addIntSlider("MIN SIZE", 0, 50, &imageSegmentation.min);
 
 	gui->loadSettings(getSettingsFilename());
-
-	//loadColors();
 }
 
 //--------------------------------------------------------------
 void ShapeDetector::update(){
-
 	kinect.update();
 	if(kinect.isFrameNew()){
 		kinect.mapDepthToColor(depthColors.getPixelsRef());
 		depthColors.update();
 	}
+}
 
-//	if(previewColors){
-//		for(int i = 0; i < SHAPE_COLOR_COUNT; i++){
-//			if(sampleConnectors[i]) {
-//				createColorMask(i);
-//			}
-//		}
-//	}
+//--------------------------------------------------------------
+void ShapeDetector::revalidateContours(){
+	validContours.clear();
+	for(int i = 0; i < contours.size(); i++){
+		contours[i].valid = 
+			contours[i].segmentedColorImage.isAllocated() &&
+			contours[i].segmentedDepthImage.isAllocated() &&
+			contours[i].contourArea > minArea && contours[i].contourArea < maxArea  &&
+			contours[i].compactness > minCompactness;
+
+		//update the list of valid contours
+		if(contours[i].valid){
+			validContours.push_back(i);
+		}
+	}
+	
+	if(currentSelectedContour >= validContours.size()){
+		currentSelectedContour  = validContours.size()-1;
+	}
 }
 
 //--------------------------------------------------------------
 void ShapeDetector::draw(){
-
-	int imageWidth  = depthColors.getWidth();
-	int imageHeight = depthColors.getHeight();
-	
-	if(!zoomFbo.isAllocated()){
-		zoomFbo.allocate(imageWidth,imageHeight,GL_RGB);
-	}
-
 	drawDebug(false);
 	drawDebug(true);
 
-	zoomFbo.draw(imageWidth,0);
-	segmentedDepthColors.draw(imageWidth,imageHeight);
-
+	zoomFbo.draw(depthImageWidth,0);
+	segmentedDepthColors.draw(depthImageWidth,depthImageWidth);
 }
-
 
 void ShapeDetector::drawDebug(bool zoom){
 
@@ -102,6 +89,10 @@ void ShapeDetector::drawDebug(bool zoom){
 	}
 
 	for(int i = 0; i < contours.size(); i++){
+		if(!contours[i].valid){
+			continue;
+		}
+
 		ShapeContour& contour = contours[i];
 		ofSetColor(255,0,0);
 
@@ -165,30 +156,9 @@ void ShapeDetector::drawDebug(bool zoom){
 	}
 }
 
-void ShapeDetector::mouseMoved(ofMouseEventArgs& args){
-}
-
-void ShapeDetector::mouseDragged(ofMouseEventArgs& args){
-
-}
-
-void ShapeDetector::mousePressed(ofMouseEventArgs& args){
-	
-	ofVec2f samplePoint(args.x,args.y);
-	ofRectangle colorWindow(0, 0, depthColors.getWidth(), depthColors.getHeight());
-	ofRectangle zoomWindow(depthColors.getWidth(), 0, depthColors.getWidth(), depthColors.getHeight());
-
-	if(colorWindow.inside(samplePoint)){
-		zoomPoint = samplePoint - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
-	}
-}
-
-
-void ShapeDetector::mouseReleased(ofMouseEventArgs& args){
-}
-
 void ShapeDetector::findShapes(){
 
+	imageSegmentation.min = minArea;
 	imageSegmentation.segment(depthColors);
 	segmentedDepthColors.setFromPixels(imageSegmentation.getSegmentedPixels());
 	segmentedDepthColors.update();
@@ -207,7 +177,6 @@ void ShapeDetector::findShapes(){
 		contourFinder.setMinArea(minArea);
 		contourFinder.setMaxArea(maxArea);
 		contourFinder.findContours(ofxCv::toCv(imageSegmentation.getSegmentMask(segment)));
-		contour.valid = false;
 
 		if(contourFinder.getContours().size() == 0){
 			ofLogError("ShapeDetector::findShapes") << "No contours in segment";
@@ -244,9 +213,10 @@ void ShapeDetector::findShapes(){
 		if(contourFinder.getContour(0).size() > 5){
 			contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(0)) );
 		}
-
 		//TODO: consider "compactness"
 	}
+
+	revalidateContours();
 
 	////////////////////////////////////////////////////////////////////
 	/*
@@ -480,6 +450,37 @@ void ShapeDetector::findShapes(){
 	*/
 }
 
+
+void ShapeDetector::mouseMoved(ofMouseEventArgs& args){}
+void ShapeDetector::mouseDragged(ofMouseEventArgs& args){}
+
+void ShapeDetector::mousePressed(ofMouseEventArgs& args){
+	
+	ofVec2f samplePoint(args.x,args.y);
+	ofRectangle colorWindow(0, 0, depthColors.getWidth(), depthColors.getHeight());
+	ofRectangle zoomWindow(depthColors.getWidth(), 0, depthColors.getWidth(), depthColors.getHeight());
+
+	if(colorWindow.inside(samplePoint)){
+		zoomPoint = samplePoint - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
+	}
+}
+
+void ShapeDetector::mouseReleased(ofMouseEventArgs& args){}
+
+void ShapeDetector::keyPressed(ofKeyEventArgs& args){
+	if(args.key == OF_KEY_LEFT){
+	}
+	if(args.key == OF_KEY_RIGHT){
+	}
+	if(args.key == OF_KEY_DOWN){
+	}
+	if(args.key == OF_KEY_UP){
+	}
+
+}
+
+void ShapeDetector::keyReleased(ofKeyEventArgs& args){
+}
 
 void ShapeDetector::exit(){
 	gui->saveSettings(getSettingsFilename());
