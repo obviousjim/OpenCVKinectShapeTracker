@@ -16,7 +16,9 @@
 //	-- large contours
 //	-- uncompact contours
 //-- show only valid contours
+//-- iterate through the contours
 //-- show stats of contours
+
 //-- add instructions to interface
 
 //OPTIMIZATIONS
@@ -25,28 +27,23 @@
 
 struct ShapeContour {
 	
-	//FROM SCAN
 	bool valid;
-	ofPolyline contour;
-	
+	ofPolyline contour;	
 	ofImage segmentedDepthImage;
 	ofImage segmentedColorImage;
 
-	//FROM CV
 	cv::Rect boundingRect;
 	cv::RotatedRect fitEllipse;
 	cv::RotatedRect fitRect;
+	float contourArea;
 	
 	ofVec2f circlePosition;
 	float circleRadius;
 	float rectMaxSide;
 
 	float compactness;
-	//COMPUTED
-	float depthPosition; //depth of sensed position
+	float depthPosition;
 
-	//shape info
-	float contourArea;
 };
 
 class ShapeDetector
@@ -66,54 +63,33 @@ class ShapeDetector
 
   protected:
 
-	void drawDebug(bool zoom);
-
+	vector<ShapeContour> contours;
+	int currentSelectedContour;
 	ofxKinectCommonBridge kinect;
 	ofxImageSegmentation imageSegmentation;
+
+	void drawDebug(bool zoom);
 	int depthImageWidth;
 	int depthImageHeight;
 
 	ofxUISuperCanvas* gui;
-	float minScanDistance;
-	float maxScanDistance;
 	float minArea;
 	float maxArea;
 
 	//visualization parameters
 	bool showAllContours;
-	bool previewColors;
 	bool previewEllipseFit;
 	bool previewRectFit;
 	bool previewCircleFit;
 	bool previewStats;
 
-//	int sampleColorIndex;
-//	void saveColors();
-//	void loadColors();
-
 	void createDepthMasks();
-	//void createColorMask(ShapeColor colorIndex);
-	//void createColorMasks();
 
-//	cv::Mat hsvImage;
-//	cv::Mat tempThresh;
 	ofImage depthColors;
 	ofImage segmentedDepthColors;
-//	ofPixels contourPix;
 
 	ofFbo zoomFbo;
 	ofVec2f zoomPoint;
 
-//	vector<bool> sampleConnectors;
-//	vector< vector<ColorSlider> > colorSamples;
-	//vector<ofShortImage> segmentedDepthImages;
-	//vector<ofImage> segmentedColorImages;
-	vector<ShapeContour> contours;
-//	vector<ColorSlider> colorSliders;
-
 	string getSettingsFilename();
-//	string getColorFilename();
-//	string getColorRangeFilename();
-
-
 };
