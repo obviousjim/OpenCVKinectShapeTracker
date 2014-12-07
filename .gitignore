@@ -12,7 +12,6 @@ xcshareddata/
 .DS_Store
 
 
-#*.jpg
 *.pdf
 *.obj
 *.mtl
@@ -34,7 +33,6 @@ ipch/
 *.sys
 *.db
 
-*.png
 *.obj
 *.obm
 *.json

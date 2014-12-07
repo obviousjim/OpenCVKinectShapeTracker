@@ -6,25 +6,24 @@
     <YPosition>38.000000000</YPosition>
 </Canvas>
 <Widget>
-    <Kind>6</Kind>
-    <Name>DEPTH RANGE</Name>
-    <HighValue>847.916625977</HighValue>
-    <LowValue>502.083343506</LowValue>
-</Widget>
-<Widget>
     <Kind>4</Kind>
     <Name>MIN AREA</Name>
-    <Value>20.833332062</Value>
+    <Value>62.500000000</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
-    <Name>SHIFT X</Name>
-    <Value>0.000000000</Value>
+    <Name>MAX AREA</Name>
+    <Value>4869.791503906</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
-    <Name>SHIFT Y</Name>
-    <Value>0.000000000</Value>
+    <Name>MIN COMPACTNESS</Name>
+    <Value>0.639374971</Value>
+</Widget>
+<Widget>
+    <Kind>2</Kind>
+    <Name>SHOW ALL CONTOURS</Name>
+    <Value>0</Value>
 </Widget>
 <Widget>
     <Kind>2</Kind>
@@ -45,4 +44,14 @@
     <Kind>2</Kind>
     <Name>PREVIEW STATS</Name>
     <Value>1</Value>
+</Widget>
+<Widget>
+    <Kind>4</Kind>
+    <Name>SIGMA</Name>
+    <Value>1.197916627</Value>
+</Widget>
+<Widget>
+    <Kind>4</Kind>
+    <Name>K</Name>
+    <Value>375.000000000</Value>
 </Widget>

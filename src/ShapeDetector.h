@@ -5,49 +5,54 @@
 #include "ofxKinectCommonBridge.h"
 #include "ofxCv.h"
 #include "ofxUI.h"
+#include "ofxImageSegmentation.h"
 
-#define SHAPE_COLOR_COUNT 8
-typedef int ShapeColor;
+//TODO 
+//-- create 3D preview
 
-struct ShapeContour {
-	
-	//FROM SCAN
-	ofPolyline contour;
-	
-	//FROM CV
+//-- add readme
+//-- add instructions and labels to interface
+//-- add comments and credits
+
+//OPTIMIZATIONS
+//-- optimize kinect
+//-- optimize image segmenter
+
+class ShapeContour {
+  public:
+	ShapeContour(){
+		valid = false;
+		contourArea = 0;
+		circleRadius = 0;
+		rectMaxSide = 0;
+		compactness = false;
+		maxDepthPosition = 0;
+		minDepthPosition = 0;
+		averageDepthPosition = 0;	
+	}
+
+	bool valid;
+	int segmentIndex;
+	ofPolyline contour;	
+	ofShortImage segmentedDepthImage;
+	ofImage segmentedColorImage;
+
 	cv::Rect boundingRect;
 	cv::RotatedRect fitEllipse;
 	cv::RotatedRect fitRect;
+	float contourArea;
 	
 	ofVec2f circlePosition;
 	float circleRadius;
 	float rectMaxSide;
-	
-	//COMPUTED
-	float depthPosition; //depth of sensed position
-	float coordRadius; //radius of sense cross section
 
-	//shape info
-	ShapeColor color;
-	float contourArea;
-};
+	//circley-ness
+	float compactness;
 
-class ColorSlider {
-  public:
-	ColorSlider(){
-		hueRange = 0;
-		saturationRange = 0;
-		valueRange = 0;
-	};
-
-	ofRectangle samplePos;
-	ofRectangle hpos;
-	ofRectangle spos;
-	ofRectangle vpos;
-	ofColor color;
-	int hueRange;
-	int saturationRange;
-	int valueRange;
+	//3D position of the object
+	unsigned short maxDepthPosition;
+	unsigned short minDepthPosition;
+	unsigned short averageDepthPosition;
 };
 
 class ShapeDetector
@@ -63,59 +68,47 @@ class ShapeDetector
 	void mousePressed(ofMouseEventArgs& args);
 	void mouseReleased(ofMouseEventArgs& args);
 
+	void keyPressed(ofKeyEventArgs& args);
+	void keyReleased(ofKeyEventArgs& args);
+
 	void findShapes();
 
   protected:
 
-	void drawDebug(bool zoom);
-	bool bDraggingSlider;
-
+	vector<ShapeContour> contours;
 	ofxKinectCommonBridge kinect;
+	ofxImageSegmentation imageSegmentation;
 	int depthImageWidth;
 	int depthImageHeight;
 
+	//updates the current list of contours based on any changes to the filter settings
+	void revalidateContours();
+	//previewing contours one at a time
+	vector<int> validContours;
+	int currentSelectedContour;
+
+	ofImage currentColorFrame;   //current color image from the Kinect mapped to depth
+	ofImage segmentedColorFrame; //captured color image the segmentation was run on
+	ofImage segmentationKey;	 //colorized segmentation image
+
+	void drawDebug(bool zoom);
+	void drawContour(ShapeContour& contour, bool showStats);
+	ofFbo zoomFbo;
+	ofVec2f zoomPoint;
+
 	ofxUISuperCanvas* gui;
-	//scanning parameters
-	ofVec2f shift;
-	float minScanDistance;
-	float maxScanDistance;
+	//filters
 	float minArea;
+	float maxArea;
+	float minCompactness;
 
 	//visualization parameters
 	bool showAllContours;
-	bool previewColors;
+	bool showSegmentationKey;
 	bool previewEllipseFit;
 	bool previewRectFit;
 	bool previewCircleFit;
 	bool previewStats;
 
-	int sampleColorIndex;
-
-	void saveColors();
-	void loadColors();
-
-	void createColorMask(ShapeColor colorIndex);
-	void createColorMasks();
-
-	cv::Mat hsvImage;
-	cv::Mat tempThresh;
-	ofImage depthColors;
-	ofPixels contourPix;
-
-	ofFbo zoomFbo;
-	ofVec2f zoomPoint;
-
-	vector<bool> sampleConnectors;
-	vector< vector<ColorSlider> > colorSamples;
-	vector<ofImage> colorMasks;
-	vector<ofImage> maskedDepthColors;
-	vector<ofShortImage> colorDepthCompositeMask;
-	vector<ShapeContour> contours;
-	vector<ColorSlider> colorSliders;
-
 	string getSettingsFilename();
-	string getColorFilename();
-	string getColorRangeFilename();
-
-
 };
