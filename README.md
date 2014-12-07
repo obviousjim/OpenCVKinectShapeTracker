@@ -3,6 +3,8 @@ OpenCVKinectShapeTracker
 
 **Kinect 2 and OpenCV Shape Detection**
 
+![example image](ShapeTracking_Example.PNG "Detection Sample")
+
 This example shows how to detect sphere like objects from the Kinect using a series of OpenCV steps
 
 1. Open a Kinect 2 color and depth stream
@@ -11,4 +13,5 @@ This example shows how to detect sphere like objects from the Kinect using a ser
 1. Run contour tracking to determine geometric properties of each segment
 1. Filter out small, oversides, and oddly shaped segments
 1. Sense depth positions of the valid segments to find their 3D positions in space
+
 
