@@ -5,9 +5,20 @@
 #include "ofxKinectCommonBridge.h"
 #include "ofxCv.h"
 #include "ofxUI.h"
+#include "ofxImageSegmentation.h"
 
 #define SHAPE_COLOR_COUNT 8
 typedef int ShapeColor;
+
+//TODO 
+//-- run contours on each segment
+//-- show stats of contours, filter by compactness
+//-- clean up from old color way
+//-- add instructions to interface
+
+//OPTIMIZATIONS
+//-- optimize kinect
+//-- optimize image segmenter
 
 struct ShapeContour {
 	
@@ -28,10 +39,11 @@ struct ShapeContour {
 	float coordRadius; //radius of sense cross section
 
 	//shape info
-	ShapeColor color;
+	//ShapeColor color;
 	float contourArea;
 };
 
+/*
 class ColorSlider {
   public:
 	ColorSlider(){
@@ -49,6 +61,7 @@ class ColorSlider {
 	int saturationRange;
 	int valueRange;
 };
+*/
 
 class ShapeDetector
 {
@@ -68,18 +81,17 @@ class ShapeDetector
   protected:
 
 	void drawDebug(bool zoom);
-	bool bDraggingSlider;
 
 	ofxKinectCommonBridge kinect;
+	ofxImageSegmentation imageSegmentation;
 	int depthImageWidth;
 	int depthImageHeight;
 
 	ofxUISuperCanvas* gui;
-	//scanning parameters
-	ofVec2f shift;
 	float minScanDistance;
 	float maxScanDistance;
 	float minArea;
+	float maxArea;
 
 	//visualization parameters
 	bool showAllContours;
@@ -89,33 +101,34 @@ class ShapeDetector
 	bool previewCircleFit;
 	bool previewStats;
 
-	int sampleColorIndex;
+//	int sampleColorIndex;
 
-	void saveColors();
-	void loadColors();
+//	void saveColors();
+//	void loadColors();
 
-	void createColorMask(ShapeColor colorIndex);
-	void createColorMasks();
+	void createDepthMasks();
+	//void createColorMask(ShapeColor colorIndex);
+	//void createColorMasks();
 
-	cv::Mat hsvImage;
-	cv::Mat tempThresh;
+//	cv::Mat hsvImage;
+//	cv::Mat tempThresh;
 	ofImage depthColors;
-	ofPixels contourPix;
+	ofImage segmentedDepthColors;
+//	ofPixels contourPix;
 
 	ofFbo zoomFbo;
 	ofVec2f zoomPoint;
 
-	vector<bool> sampleConnectors;
-	vector< vector<ColorSlider> > colorSamples;
-	vector<ofImage> colorMasks;
-	vector<ofImage> maskedDepthColors;
-	vector<ofShortImage> colorDepthCompositeMask;
+//	vector<bool> sampleConnectors;
+//	vector< vector<ColorSlider> > colorSamples;
+	vector<ofShortImage> segmentedDepthImages;
+	vector<ofImage> segmentedColorImages;
 	vector<ShapeContour> contours;
-	vector<ColorSlider> colorSliders;
+//	vector<ColorSlider> colorSliders;
 
 	string getSettingsFilename();
-	string getColorFilename();
-	string getColorRangeFilename();
+//	string getColorFilename();
+//	string getColorRangeFilename();
 
 
 };
