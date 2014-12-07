@@ -18,8 +18,8 @@ void ShapeDetector::setup(){
 
 	gui = new ofxUISuperCanvas("SHAPEGUI", 200, 0, 200, 700);
 	gui->addLabel("FILTERS");
-	gui->addSlider("MIN AREA", 0, 100, &minArea);
-	gui->addSlider("MAX AREA", 0, 500, &maxArea);
+	gui->addSlider("MIN AREA", 0, 500, &minArea);
+	gui->addSlider("MAX AREA", 0, 5000, &maxArea);
 	gui->addSlider("MIN COMPACTNESS", 0, 1.0, &minCompactness);
 
 	gui->addLabel("PREVIEW OPTIONS");
@@ -55,9 +55,8 @@ void ShapeDetector::revalidateContours(){
 		contours[i].valid = 
 			contours[i].segmentedColorImage.isAllocated() &&
 			contours[i].segmentedDepthImage.isAllocated() &&
-			contours[i].contourArea > minArea && contours[i].contourArea < maxArea;//  &&
-			//todo add compactness
-			//contours[i].compactness > minCompactness;
+			contours[i].contourArea > minArea && contours[i].contourArea < maxArea &&
+			contours[i].compactness > minCompactness;
 
 		//update the list of valid contours
 		if(contours[i].valid){
@@ -126,7 +125,7 @@ void ShapeDetector::drawDebug(bool zoom){
 		}
 	}
 	else{
-		if(currentSelectedContour > 0 && currentSelectedContour < validContours.size()){
+		if(currentSelectedContour >= 0 && currentSelectedContour < validContours.size()){
 			drawContour(contours[validContours[currentSelectedContour]], previewStats);
 		}
 	}
@@ -179,19 +178,16 @@ void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
 	}
 
 	if(showStats){
-		string debugString = "TEST";
-		/*
+		//string debugString; = "TEST";
+		
 		stringstream posstr;
-		posstr << contour.shape.position;
-		string debugString = contour.shape.getDescription() +
-							"\nLEVEL:  " + ofToString(contours[i].level) +
-							"\nDEPTH:  " + ofToString(contour.depthPosition) +
-							"\nPOS:    " + ofToString(posstr.str()) +
-							"\nPERC ON: " + ofToString(contour.shape.onDepthRatio, 2) +
-							"\nRADIUS:  " + ofToString(contour.coordRadius,4) +
-							//"\nRECTSIDE:\t" + ofToString(contour.rectMaxSide,4) +
-							"\nBOXY:   "+ ofToString(contour.shape.boxiness,4);
-							*/
+		posstr << contour.contour.getCentroid2D();
+		string debugString = "SEGMENT " + ofToString(contour.segmentIndex) +
+							"\nPOSITION: " + posstr.str() +
+							"\nAREA:     " + ofToString(contour.contourArea) +
+//TODO DEPTH:				"\nDEPTH:  " + ofToString(contour.depthPosition) +
+							"\nCOMPACT:  " + ofToString(contour.compactness,4);
+							
 		ofSetColor(0);
 		ofDrawBitmapString(debugString, contour.circlePosition + ofVec2f(contour.circleRadius,contour.circleRadius));
 		ofSetColor(255);
@@ -219,13 +215,13 @@ void ShapeDetector::findShapes(){
 	for(int segment = 0; segment < imageSegmentation.numSegments; segment++){
 
 		ShapeContour& contour = contours[segment];
-
+		contour.segmentIndex = segment;
 		ofxCv::ContourFinder contourFinder;
 		cv::Point2f minCircleCenter;
 		float minCircleRadius;
 		contourFinder.setAutoThreshold(false);
-		contourFinder.setMinArea(minArea);
-		contourFinder.setMaxArea(maxArea);
+		//contourFinder.setMinArea(minArea);
+		//contourFinder.setMaxArea(maxArea);
 		ofPixels mask = imageSegmentation.getSegmentMask(segment);
 		cv::Mat cvmask = ofxCv::toCv(mask);
 		contourFinder.findContours(cvmask);
@@ -242,10 +238,12 @@ void ShapeDetector::findShapes(){
 		//ofxCv::invert( cvmask );
 
 		contour.segmentedColorImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
+		contour.segmentedColorImage.getPixelsRef().set(0);
 		ofxCv::toCv(segmentedColorFrame).copyTo( ofxCv::toCv(contour.segmentedColorImage), cvmask ); 
 		contour.segmentedColorImage.update();
 
 		contour.segmentedDepthImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_GRAYSCALE);
+		contour.segmentedDepthImage.getPixelsRef().set(0);
 		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(contour.segmentedDepthImage), cvmask ); 
 		contour.segmentedDepthImage.update();
 
@@ -267,9 +265,13 @@ void ShapeDetector::findShapes(){
 		if(contourFinder.getContour(0).size() > 5){
 			contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(0)) );
 		}
-		//TODO: consider "compactness"
 		//http://en.wikipedia.org/wiki/Isoperimetric_inequality
 		//(4*pi*A)/(L*L) 
+		float L = contour.contour.getPerimeter();
+		float A = contour.contourArea;
+		contour.compactness = 4 * PI * A / (L*L);
+		cout << "compactness is " << contour.compactness << endl;
+
 	}
 
 	revalidateContours();

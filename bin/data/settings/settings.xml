@@ -8,17 +8,17 @@
 <Widget>
     <Kind>4</Kind>
     <Name>MIN AREA</Name>
-    <Value>22.395832062</Value>
+    <Value>54.687500000</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
     <Name>MAX AREA</Name>
-    <Value>247.395828247</Value>
+    <Value>4973.958496094</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
     <Name>MIN COMPACTNESS</Name>
-    <Value>0.000000000</Value>
+    <Value>0.593750000</Value>
 </Widget>
 <Widget>
     <Kind>2</Kind>
@@ -28,12 +28,12 @@
 <Widget>
     <Kind>2</Kind>
     <Name>PREVIEW ELLIPSE</Name>
-    <Value>0</Value>
+    <Value>1</Value>
 </Widget>
 <Widget>
     <Kind>2</Kind>
     <Name>PREVIEW RECT</Name>
-    <Value>0</Value>
+    <Value>1</Value>
 </Widget>
 <Widget>
     <Kind>2</Kind>
@@ -48,10 +48,10 @@
 <Widget>
     <Kind>4</Kind>
     <Name>SIGMA</Name>
-    <Value>2.000000000</Value>
+    <Value>1.197916627</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
     <Name>K</Name>
-    <Value>169.270828247</Value>
+    <Value>375.000000000</Value>
 </Widget>

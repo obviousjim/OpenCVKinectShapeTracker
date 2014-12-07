@@ -8,10 +8,6 @@
 #include "ofxImageSegmentation.h"
 
 //TODO 
-//-- fix masks
-
-//-- add filters
-//	-- compactness of contours
 //-- show stats of contours
 //-- auto zoom when showing just one contour
 //-- show zoom rectangle when showing all contours
@@ -33,6 +29,7 @@ class ShapeContour {
 	}
 
 	bool valid;
+	int segmentIndex;
 	ofPolyline contour;	
 	ofShortImage segmentedDepthImage;
 	ofImage segmentedColorImage;
