@@ -74,41 +74,52 @@ void ShapeDetector::revalidateContours(){
 //--------------------------------------------------------------
 void ShapeDetector::draw(){
 
+	if(currentColorFrame.isAllocated()){ 
+		currentColorFrame.draw(0,0);
+	}
+
+	//draw the extracted color portion
+	if(segmentationKey.isAllocated()){
+		segmentationKey.draw(depthImageWidth,0);
+	}
+
+	//draw backdrop for contours below
+	if(showAllContours){
+		if(segmentedColorFrame.isAllocated()){
+			segmentedColorFrame.draw(0,depthImageHeight);
+		}				
+	}
+	else if(currentSelectedContour != -1){
+		contours[ validContours[currentSelectedContour] ].segmentedColorImage.draw(0,depthImageHeight);
+	}
+
 	//draw the full zoomed out left panel
 	drawDebug(false);
 	//then draw a detail view into zoomFbo
 	drawDebug(true);
 	//... and show it one panel over
-	zoomFbo.draw(depthImageWidth,0);
-	//draw the extracted color portion
-	if(segmentationKey.isAllocated()){
-		segmentationKey.draw(0,depthImageHeight);
-	}
+	zoomFbo.draw(depthImageWidth,depthImageHeight);
 
-	if(showAllContours){
-		if(segmentedColorFrame.isAllocated()){
-			segmentedColorFrame.draw(depthImageWidth,depthImageHeight);
-		}				
-	}
-	else if(currentSelectedContour != -1){
-		contours[ validContours[currentSelectedContour] ].segmentedColorImage.draw(depthImageWidth,depthImageHeight);
-	}
 }
 
 void ShapeDetector::drawDebug(bool zoom){
+
 
 	if(zoom){
 		zoomFbo.begin();
 		ofClear(0,0,0);
 		ofPushMatrix();
+
 		ofScale(5,5);
 		ofTranslate(-zoomPoint.x, -zoomPoint.y);
 	}
-	
-	if(currentColorFrame.isAllocated()){ 
-		currentColorFrame.draw(0,0);
-	}
 
+
+	if(!zoom){
+		ofPushMatrix();
+		//draw over the bottom right panel
+		ofTranslate(0,depthImageHeight);	
+	}
 
 	if(showAllContours){
 		for(int i = 0; i < validContours.size(); i++){
@@ -121,10 +132,11 @@ void ShapeDetector::drawDebug(bool zoom){
 		}
 	}
 
+	ofPopMatrix();
 	if(zoom){
-		ofPopMatrix();
 		zoomFbo.end();
 	}
+
 }
 
 void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
