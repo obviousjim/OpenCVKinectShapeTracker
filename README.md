@@ -28,7 +28,7 @@ NOTE: this example is currently Windows only becaue of Kinect Common Bridge depe
 4. Opent the .sln file and build and go
 
 ### Credits
-This example was created by [James George](http://jamesgeorge.org) for the [Curio Aquarium](http://curioaquarium.co) project, with financial support and encouragement from the Kinect For Windows team. 
+This example was created by [James George](http://jamesgeorge.org) for [Specular's](http://specular.cc) project [Curio Aquarium](http://curioaquarium.co), which was financially supported and encouraged by the Kinect For Windows team. 
 
 ofxUI is by [Reza Ali](http://www.syedrezaali.com/)
 
