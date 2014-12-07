@@ -7,18 +7,10 @@
 #include "ofxUI.h"
 #include "ofxImageSegmentation.h"
 
-//#define SHAPE_COLOR_COUNT 8
-//typedef int ShapeColor;
-
 //TODO 
 //-- add filters
-//	-- small contours
-//	-- large contours
 //	-- uncompact contours
-//-- show only valid contours
-//-- iterate through the contours
 //-- show stats of contours
-
 //-- add instructions to interface
 
 //OPTIMIZATIONS
@@ -38,7 +30,7 @@ class ShapeContour {
 
 	bool valid;
 	ofPolyline contour;	
-	ofImage segmentedDepthImage;
+	ofShortImage segmentedDepthImage;
 	ofImage segmentedColorImage;
 
 	cv::Rect boundingRect;
@@ -77,38 +69,37 @@ class ShapeDetector
 	vector<ShapeContour> contours;
 	ofxKinectCommonBridge kinect;
 	ofxImageSegmentation imageSegmentation;
-
-	ofImage depthColors;
-	ofImage segmentedDepthColors;
-
-	ofFbo zoomFbo;
-	ofVec2f zoomPoint;
-
 	int depthImageWidth;
 	int depthImageHeight;
 
-	void drawDebug(bool zoom);
-	void drawContour(ShapeContour& contour, bool showStats);
-
 	//updates the current list of contours based on any changes to the filter settings
 	void revalidateContours();
-
-	ofxUISuperCanvas* gui;
-	float minArea;
-	float maxArea;
-	float minCompactness;
-
 	//previewing contours one at a time
 	vector<int> validContours;
 	int currentSelectedContour;
 
+	ofImage currentColorFrame;   //current color image from the Kinect mapped to depth
+	ofImage segmentedColorFrame; //captured color image the segmentation was run on
+	ofImage segmentationKey;	 //colorized segmentation image
+
+	void drawDebug(bool zoom);
+	void drawContour(ShapeContour& contour, bool showStats);
+	ofFbo zoomFbo;
+	ofVec2f zoomPoint;
+
+	ofxUISuperCanvas* gui;
+	//filters
+	float minArea;
+	float maxArea;
+	float minCompactness;
+
 	//visualization parameters
 	bool showAllContours;
+	bool showSegmentationKey;
 	bool previewEllipseFit;
 	bool previewRectFit;
 	bool previewCircleFit;
 	bool previewStats;
 
-	//void createDepthMasks();
 	string getSettingsFilename();
 };

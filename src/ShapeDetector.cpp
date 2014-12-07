@@ -14,7 +14,7 @@ void ShapeDetector::setup(){
 	depthImageHeight = kinect.getDepthPixelsRef().getHeight();
 
 	zoomFbo.allocate(depthImageWidth,depthImageHeight,GL_RGB);
-	depthColors.allocate(depthImageWidth, depthImageHeight,OF_IMAGE_COLOR);
+	currentColorFrame.allocate(depthImageWidth, depthImageHeight, OF_IMAGE_COLOR);
 
 	gui = new ofxUISuperCanvas("SHAPEGUI", 200, 0, 200, 700);
 	gui->addLabel("FILTERS");
@@ -24,6 +24,7 @@ void ShapeDetector::setup(){
 
 	gui->addLabel("PREVIEW OPTIONS");
 	gui->addToggle("SHOW ALL CONTOURS", &showAllContours);
+	//gui->addToggle("SHOW SEGMENTATION KEY", &showSegmentationKey);
 	gui->addToggle("PREVIEW ELLIPSE",&previewEllipseFit);
 	gui->addToggle("PREVIEW RECT",&previewRectFit);
 	gui->addToggle("PREVIEW CIRCLE", &previewCircleFit);
@@ -40,8 +41,8 @@ void ShapeDetector::setup(){
 void ShapeDetector::update(){
 	kinect.update();
 	if(kinect.isFrameNew()){
-		kinect.mapDepthToColor(depthColors.getPixelsRef());
-		depthColors.update();
+		kinect.mapDepthToColor(currentColorFrame.getPixelsRef());
+		currentColorFrame.update();
 	}
 
 	revalidateContours();
@@ -79,10 +80,17 @@ void ShapeDetector::draw(){
 	drawDebug(true);
 	//... and show it one panel over
 	zoomFbo.draw(depthImageWidth,0);
-	//and also draw the segmented image below
-	segmentedDepthColors.draw(0,depthImageWidth);
 	//draw the extracted color portion
-	if(!showAllContours && currentSelectedContour != -1){
+	if(segmentationKey.isAllocated()){
+		segmentationKey.draw(0,depthImageHeight);
+	}
+
+	if(showAllContours){
+		if(segmentedColorFrame.isAllocated()){
+			segmentedColorFrame.draw(depthImageWidth,depthImageHeight);
+		}				
+	}
+	else if(currentSelectedContour != -1){
 		contours[ validContours[currentSelectedContour] ].segmentedColorImage.draw(depthImageWidth,depthImageHeight);
 	}
 }
@@ -97,14 +105,14 @@ void ShapeDetector::drawDebug(bool zoom){
 		ofTranslate(-zoomPoint.x, -zoomPoint.y);
 	}
 	
-	if(depthColors.isAllocated()){ 
-		depthColors.draw(0,0);
+	if(currentColorFrame.isAllocated()){ 
+		currentColorFrame.draw(0,0);
 	}
+
 
 	if(showAllContours){
 		for(int i = 0; i < validContours.size(); i++){
 			drawContour(contours[ validContours[i] ], previewStats && zoom);
-			
 		}
 	}
 	else{
@@ -182,11 +190,17 @@ void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
 
 void ShapeDetector::findShapes(){
 
+	//copy the current color frame into a snapshot for the one we are segmenting
+	segmentedColorFrame = currentColorFrame;
+	
+	//segment the image
 	imageSegmentation.min = minArea;
-	imageSegmentation.segment(depthColors);
-	segmentedDepthColors.setFromPixels(imageSegmentation.getSegmentedPixels());
-	segmentedDepthColors.update();
+	imageSegmentation.segment(segmentedColorFrame );
+	//store the segmentation key
+	segmentationKey.setFromPixels(imageSegmentation.getSegmentedPixels());
+	segmentationKey.update();
 
+	//find and store contours from the segmentation masks
 	contours.clear();
 	contours.resize(imageSegmentation.numSegments);
 
@@ -212,7 +226,7 @@ void ShapeDetector::findShapes(){
 		}
 		
 		contour.segmentedColorImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
-		ofxCv::toCv(depthColors).copyTo( ofxCv::toCv(contour.segmentedColorImage), ofxCv::toCv(imageSegmentation.getSegmentMask(segment)) ); 
+		ofxCv::toCv(segmentedColorFrame).copyTo( ofxCv::toCv(contour.segmentedColorImage), ofxCv::toCv(imageSegmentation.getSegmentMask(segment)) ); 
 		contour.segmentedColorImage.update();
 
 		contour.segmentedDepthImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_GRAYSCALE);
@@ -480,7 +494,7 @@ void ShapeDetector::findShapes(){
 void ShapeDetector::mousePressed(ofMouseEventArgs& args){
 	
 	ofVec2f samplePoint(args.x,args.y);
-	ofRectangle colorWindow(0, 0, depthColors.getWidth(), depthColors.getHeight());
+	ofRectangle colorWindow(0, 0, segmentedColorFrame.getWidth(), segmentedColorFrame.getHeight());
 
 	if(colorWindow.inside(samplePoint)){
 		zoomPoint = samplePoint - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
