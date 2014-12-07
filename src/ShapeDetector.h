@@ -7,13 +7,16 @@
 #include "ofxUI.h"
 #include "ofxImageSegmentation.h"
 
-#define SHAPE_COLOR_COUNT 8
-typedef int ShapeColor;
+//#define SHAPE_COLOR_COUNT 8
+//typedef int ShapeColor;
 
 //TODO 
-//-- run contours on each segment
-//-- show stats of contours, filter by compactness
-//-- clean up from old color way
+//-- add filters
+//	-- small contours
+//	-- large contours
+//	-- uncompact contours
+//-- show only valid contours
+//-- show stats of contours
 //-- add instructions to interface
 
 //OPTIMIZATIONS
@@ -33,10 +36,10 @@ struct ShapeContour {
 	ofVec2f circlePosition;
 	float circleRadius;
 	float rectMaxSide;
-	
+
+	float compactness;
 	//COMPUTED
 	float depthPosition; //depth of sensed position
-	float coordRadius; //radius of sense cross section
 
 	//shape info
 	//ShapeColor color;

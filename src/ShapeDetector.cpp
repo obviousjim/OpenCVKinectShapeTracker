@@ -32,6 +32,7 @@ void ShapeDetector::setup(){
 	gui = new ofxUISuperCanvas("SHAPEGUI", 200,0,200,700);
 	gui->addRangeSlider("DEPTH RANGE",500,900,&minScanDistance,&maxScanDistance);
 	gui->addSlider("MIN AREA", 0, 100, &minArea);
+	gui->addSlider("MAX AREA", 0, 500, &maxArea);
 //	gui->addSlider("SHIFT X", -10, 10, &shift.x);
 //	gui->addSlider("SHIFT Y", -10, 10, &shift.y);
 	gui->addSpacer();
@@ -333,6 +334,23 @@ void ShapeDetector::createColorMask(ShapeColor colorIndex){
 }
 */
 
+void ShapeDetector::createDepthMasks(){
+
+	segmentedColorImages.clear();
+	segmentedDepthImages.clear();
+	segmentedColorImages.resize(imageSegmentation.numSegments);
+	segmentedDepthImages.resize(imageSegmentation.numSegments);
+
+	for(int i = 0; i < imageSegmentation.numSegments; i++){
+		segmentedColorImages[i].allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
+		segmentedDepthImages[i].allocate(depthImageWidth,depthImageHeight,OF_IMAGE_GRAYSCALE);
+		ofxCv::toCv(depthColors).copyTo( ofxCv::toCv(segmentedColorImages[i]), ofxCv::toCv(imageSegmentation.getSegmentMask(i)) ); 
+		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(segmentedDepthImages[i]), ofxCv::toCv(imageSegmentation.getSegmentMask(i)) ); 
+		segmentedColorImages[i].update();
+		segmentedDepthImages[i].update();
+
+	}
+}
 void ShapeDetector::findShapes(){
 
 	imageSegmentation.segment(depthColors);
@@ -346,8 +364,8 @@ void ShapeDetector::findShapes(){
 	//BUILD UP A CONTOUR MODEL AT EACH THRESHOLD STAGE
 	contours.clear();
 
-	ofShortPixels fakeDepthImage; // for faking depth maps per contour
-	fakeDepthImage.allocate(depthImageWidth,depthImageHeight, OF_IMAGE_GRAYSCALE);
+	//ofShortPixels fakeDepthImage; // for faking depth maps per contour
+	//fakeDepthImage.allocate(depthImageWidth,depthImageHeight, OF_IMAGE_GRAYSCALE);
 
 	for(int segment = 0; segment < imageSegmentation.numSegments; segment++){
 
@@ -357,7 +375,7 @@ void ShapeDetector::findShapes(){
 
 		contourFinder.setAutoThreshold(false);
 		contourFinder.setMinArea(minArea);
-	
+		contourFinder.setMaxArea(maxArea);
 		contourFinder.findContours(ofxCv::toCv(imageSegmentation.getSegmentMask(segment)));
 		for(int i = 0; i < contourFinder.getContours().size(); i++){
 			
@@ -618,24 +636,6 @@ void ShapeDetector::findShapes(){
 	*/
 }
 
-void ShapeDetector::createDepthMasks(){
-
-	segmentedColorImages.clear();
-	segmentedDepthImages.clear();
-	segmentedColorImages.resize(imageSegmentation.numSegments);
-	segmentedDepthImages.resize(imageSegmentation.numSegments);
-
-	for(int i = 0; i < imageSegmentation.numSegments; i++){
-		segmentedColorImages[i].allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
-		segmentedDepthImages[i].allocate(depthImageWidth,depthImageHeight,OF_IMAGE_GRAYSCALE);
-		ofxCv::toCv(depthColors).copyTo( ofxCv::toCv(segmentedColorImages[i]), ofxCv::toCv(imageSegmentation.getSegmentMask(i)) ); 
-		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(segmentedDepthImages[i]), ofxCv::toCv(imageSegmentation.getSegmentMask(i)) ); 
-		segmentedColorImages[i].update();
-		segmentedDepthImages[i].update();
-
-	}
-
-}
 
 void ShapeDetector::exit(){
 //	saveColors();
@@ -695,12 +695,12 @@ void ShapeDetector::loadColors(){
 string ShapeDetector::getSettingsFilename(){
 	return "settings/settings.xml";
 }
-
-string ShapeDetector::getColorFilename(){
-	return "settings/colors.xml";	
-}
-
-string ShapeDetector::getColorRangeFilename(){
-	return "settings/colorranges.xml";	
-}
+//
+//string ShapeDetector::getColorFilename(){
+//	return "settings/colors.xml";	
+//}
+//
+//string ShapeDetector::getColorRangeFilename(){
+//	return "settings/colorranges.xml";	
+//}
 
