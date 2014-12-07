@@ -16,8 +16,8 @@ This example shows how to detect sphere like objects from the Kinect using a ser
 
 ## How do I get it to work?
 
-* NOTE this example is currently Windows only becaue of Kinect Common Bridge dependency.
-* 
+NOTE: this example is currently Windows only becaue of Kinect Common Bridge dependency.
+
 1. Download [openFrameworks 0.8.4 for VS2012](http://openframeworks.cc/download/)
 2. Clone this repository into apps/myApps
 3. Clone the following addons into addons/
@@ -26,5 +26,12 @@ This example shows how to detect sphere like objects from the Kinect using a ser
   3. [ofxCv](https://github.com/obviousjim/ofxCv)
   4. [ofxImageSegmentation](https://github.com/obviousjim/ofxImageSegmentation)
 4. Opent the .sln file and build and go
+
+### Credits
+This example was created by (James George)[http://jamesgeorge.org] for the [Curio Aquarium](http://curioaquarium.co) project, with financial support and encouragement from the Kinect For Windows team. 
+
+ofxUI is originally by Reza Ali; ofxCv by Kyle McDonald; ofxImageSegmentation by James George based on [this example](http://cs.brown.edu/~pff/segment/)
+
+
 
 
