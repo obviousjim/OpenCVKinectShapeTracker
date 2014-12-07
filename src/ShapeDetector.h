@@ -26,8 +26,12 @@
 struct ShapeContour {
 	
 	//FROM SCAN
+	bool valid;
 	ofPolyline contour;
 	
+	ofImage segmentedDepthImage;
+	ofImage segmentedColorImage;
+
 	//FROM CV
 	cv::Rect boundingRect;
 	cv::RotatedRect fitEllipse;
@@ -42,29 +46,8 @@ struct ShapeContour {
 	float depthPosition; //depth of sensed position
 
 	//shape info
-	//ShapeColor color;
 	float contourArea;
 };
-
-/*
-class ColorSlider {
-  public:
-	ColorSlider(){
-		hueRange = 0;
-		saturationRange = 0;
-		valueRange = 0;
-	};
-
-	ofRectangle samplePos;
-	ofRectangle hpos;
-	ofRectangle spos;
-	ofRectangle vpos;
-	ofColor color;
-	int hueRange;
-	int saturationRange;
-	int valueRange;
-};
-*/
 
 class ShapeDetector
 {
@@ -105,7 +88,6 @@ class ShapeDetector
 	bool previewStats;
 
 //	int sampleColorIndex;
-
 //	void saveColors();
 //	void loadColors();
 
@@ -124,8 +106,8 @@ class ShapeDetector
 
 //	vector<bool> sampleConnectors;
 //	vector< vector<ColorSlider> > colorSamples;
-	vector<ofShortImage> segmentedDepthImages;
-	vector<ofImage> segmentedColorImages;
+	//vector<ofShortImage> segmentedDepthImages;
+	//vector<ofImage> segmentedColorImages;
 	vector<ShapeContour> contours;
 //	vector<ColorSlider> colorSliders;
 

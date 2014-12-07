@@ -168,10 +168,6 @@ void ShapeDetector::drawDebug(bool zoom){
 	}
 	*/
 
-	for(int i = 0; i < segmentedColorImages.size(); i++){
-		
-	}
-
 	ofPopStyle();
 
 	if(contours.size() > 0){
@@ -335,7 +331,7 @@ void ShapeDetector::createColorMask(ShapeColor colorIndex){
 */
 
 void ShapeDetector::createDepthMasks(){
-
+	/*
 	segmentedColorImages.clear();
 	segmentedDepthImages.clear();
 	segmentedColorImages.resize(imageSegmentation.numSegments);
@@ -348,60 +344,78 @@ void ShapeDetector::createDepthMasks(){
 		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(segmentedDepthImages[i]), ofxCv::toCv(imageSegmentation.getSegmentMask(i)) ); 
 		segmentedColorImages[i].update();
 		segmentedDepthImages[i].update();
-
 	}
+	*/
 }
+
 void ShapeDetector::findShapes(){
 
 	imageSegmentation.segment(depthColors);
 	segmentedDepthColors.setFromPixels(imageSegmentation.getSegmentedPixels());
 	segmentedDepthColors.update();
 
-	createDepthMasks();
+	contours.clear();
+	contours.resize(imageSegmentation.numSegments);
 
+	//createDepthMasks();
 	//createColorMasks();
 
 	//BUILD UP A CONTOUR MODEL AT EACH THRESHOLD STAGE
-	contours.clear();
+	//validSegments.clear();
 
 	//ofShortPixels fakeDepthImage; // for faking depth maps per contour
 	//fakeDepthImage.allocate(depthImageWidth,depthImageHeight, OF_IMAGE_GRAYSCALE);
 
 	for(int segment = 0; segment < imageSegmentation.numSegments; segment++){
 
+		ShapeContour& contour = contours[segment];
+
 		ofxCv::ContourFinder contourFinder;
 		cv::Point2f minCircleCenter;
 		float minCircleRadius;
-
 		contourFinder.setAutoThreshold(false);
 		contourFinder.setMinArea(minArea);
 		contourFinder.setMaxArea(maxArea);
 		contourFinder.findContours(ofxCv::toCv(imageSegmentation.getSegmentMask(segment)));
-		for(int i = 0; i < contourFinder.getContours().size(); i++){
-			
-			ShapeContour contour;
-			contour.contour = contourFinder.getPolyline(i);
-			contour.contourArea = contourFinder.getContourArea(i);
-			contour.boundingRect = contourFinder.getBoundingRect(i);
-				
-			//what is the min circle we can draw around the contour?
-			cv::minEnclosingCircle(cv::Mat(contourFinder.getContour(i)),minCircleCenter,minCircleRadius);
-			contour.circlePosition = ofxCv::toOf(minCircleCenter);
-			contour.circleRadius = minCircleRadius * .85;
-			contour.fitRect = cv::minAreaRect( cv::Mat(contourFinder.getContour(i)) );
-			//contour.fitRect.size.width  *= .85;
-			//contour.fitRect.size.height *= .85;
-				
-			contour.rectMaxSide = MAX(contour.fitRect.size.width,contour.fitRect.size.height);
+		contour.valid = false;
 
-			//fit an elipse to the contour to compare the to the actual edge
-			if(contourFinder.getContour(i).size() > 5){
-				contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(i)) );
-			}
-
-			//TODO: consider "compactness"
-			contours.push_back(contour);
+		if(contourFinder.getContours().size() == 0){
+			ofLogError("ShapeDetector::findShapes") << "No contours in segment";
+			continue;
 		}
+
+		if(contourFinder.getContours().size() > 1){
+			ofLogError("ShapeDetector::findShapes") << "Multiple contours in segment. only looking at first";
+		}
+		
+		contour.segmentedColorImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
+		ofxCv::toCv(depthColors).copyTo( ofxCv::toCv(contour.segmentedColorImage), ofxCv::toCv(imageSegmentation.getSegmentMask(segment)) ); 
+		contour.segmentedColorImage.update();
+
+		contour.segmentedDepthImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_GRAYSCALE);
+		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(contour.segmentedDepthImage), ofxCv::toCv(imageSegmentation.getSegmentMask(segment)) ); 
+		contour.segmentedDepthImage.update();
+
+		contour.contour = contourFinder.getPolyline(0);
+		contour.contourArea = contourFinder.getContourArea(0);
+		contour.boundingRect = contourFinder.getBoundingRect(0);
+				
+		//what is the min circle we can draw around the contour?
+		cv::minEnclosingCircle(cv::Mat(contourFinder.getContour(0)),minCircleCenter,minCircleRadius);
+		contour.circlePosition = ofxCv::toOf(minCircleCenter);
+		contour.circleRadius = minCircleRadius;
+		contour.fitRect = cv::minAreaRect( cv::Mat(contourFinder.getContour(0)) );
+		//contour.fitRect.size.width  *= .85;
+		//contour.fitRect.size.height *= .85;
+				
+		contour.rectMaxSide = MAX(contour.fitRect.size.width,contour.fitRect.size.height);
+
+		//fit an elipse to the contour to compare the to the actual edge
+		if(contourFinder.getContour(0).size() > 5){
+			contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(0)) );
+		}
+
+		//TODO: consider "compactness"
 	}
 
 	////////////////////////////////////////////////////////////////////
