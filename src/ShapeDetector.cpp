@@ -88,65 +88,15 @@ void ShapeDetector::drawDebug(bool zoom){
 		depthColors.draw(0,0);
 	}
 
-	for(int i = 0; i < contours.size(); i++){
-		if(!contours[i].valid){
-			continue;
+	if(showAllContours){
+		for(int i = 0; i < contours.size(); i++){
+			if(contours[i].valid) 
+				drawContour(contours[i], previewStats && zoom);
 		}
-
-		ShapeContour& contour = contours[i];
-		ofSetColor(255,0,0);
-
-		contour.contour.draw();	
-		if(previewCircleFit){
-			ofNoFill();
-			ofSetColor(0,0,255);
-			ofCircle(contour.circlePosition,contour.circleRadius);
-		}
-		if(previewEllipseFit){
-			ofSetColor(255,0,255);
-			ofMesh m;
-			cv::Point2f rectpoints[4];
-			contour.fitEllipse.points(rectpoints);
-			m.addVertex( ofxCv::toOf(rectpoints[0]) );
-			m.addVertex( ofxCv::toOf(rectpoints[1]) );
-			m.addVertex( ofxCv::toOf(rectpoints[2]) );
-			m.addVertex( ofxCv::toOf(rectpoints[3]) );
-			m.setMode(OF_PRIMITIVE_LINE_LOOP);
-			m.draw();
-		}
-				
-		if(previewRectFit){
-			ofSetColor(0,100,255);
-			ofMesh m;
-			cv::Point2f rectpoints[4];
-			contour.fitRect.points(rectpoints);
-			m.addVertex( ofxCv::toOf(rectpoints[0]) );
-			m.addVertex( ofxCv::toOf(rectpoints[1]) );
-			m.addVertex( ofxCv::toOf(rectpoints[2]) );
-			m.addVertex( ofxCv::toOf(rectpoints[3]) );
-			m.setMode(OF_PRIMITIVE_LINE_LOOP);
-			m.draw();
-		}
-
-		if(zoom && previewStats){
-			string debugString = "TEST";
-			/*
-			stringstream posstr;
-			posstr << contour.shape.position;
-			string debugString = contour.shape.getDescription() +
-								"\nLEVEL:  " + ofToString(contours[i].level) +
-								"\nDEPTH:  " + ofToString(contour.depthPosition) +
-								"\nPOS:    " + ofToString(posstr.str()) +
-								"\nPERC ON: " + ofToString(contour.shape.onDepthRatio, 2) +
-								"\nRADIUS:  " + ofToString(contour.coordRadius,4) +
-								//"\nRECTSIDE:\t" + ofToString(contour.rectMaxSide,4) +
-								"\nBOXY:   "+ ofToString(contour.shape.boxiness,4);
-								*/
-			ofSetColor(0);
-			ofDrawBitmapString(debugString, contour.circlePosition + ofVec2f(contour.circleRadius,contour.circleRadius));
-			ofSetColor(255);
-			ofDrawBitmapString(debugString, contour.circlePosition + ofVec2f(contour.circleRadius-.2,contour.circleRadius+.2));
-
+	}
+	else{
+		if(currentSelectedContour > 0 && currentSelectedContour < contours.size()){
+			drawContour(contours[currentSelectedContour], previewStats);
 		}
 	}
 
@@ -154,6 +104,67 @@ void ShapeDetector::drawDebug(bool zoom){
 		ofPopMatrix();
 		zoomFbo.end();
 	}
+}
+
+void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
+
+	ofPushStyle();
+	ofSetColor(ofColor::blueSteel);
+
+	contour.contour.draw();	
+	
+	if(previewCircleFit){
+		ofNoFill();
+		ofSetColor(0,0,255);
+		ofCircle(contour.circlePosition,contour.circleRadius);
+	}
+
+	if(previewEllipseFit){
+		ofSetColor(255,0,255);
+		ofMesh m;
+		cv::Point2f rectpoints[4];
+		contour.fitEllipse.points(rectpoints);
+		m.addVertex( ofxCv::toOf(rectpoints[0]) );
+		m.addVertex( ofxCv::toOf(rectpoints[1]) );
+		m.addVertex( ofxCv::toOf(rectpoints[2]) );
+		m.addVertex( ofxCv::toOf(rectpoints[3]) );
+		m.setMode(OF_PRIMITIVE_LINE_LOOP);
+		m.draw();
+	}
+				
+	if(previewRectFit){
+		ofSetColor(0,100,255);
+		ofMesh m;
+		cv::Point2f rectpoints[4];
+		contour.fitRect.points(rectpoints);
+		m.addVertex( ofxCv::toOf(rectpoints[0]) );
+		m.addVertex( ofxCv::toOf(rectpoints[1]) );
+		m.addVertex( ofxCv::toOf(rectpoints[2]) );
+		m.addVertex( ofxCv::toOf(rectpoints[3]) );
+		m.setMode(OF_PRIMITIVE_LINE_LOOP);
+		m.draw();
+	}
+
+	if(showStats){
+		string debugString = "TEST";
+		/*
+		stringstream posstr;
+		posstr << contour.shape.position;
+		string debugString = contour.shape.getDescription() +
+							"\nLEVEL:  " + ofToString(contours[i].level) +
+							"\nDEPTH:  " + ofToString(contour.depthPosition) +
+							"\nPOS:    " + ofToString(posstr.str()) +
+							"\nPERC ON: " + ofToString(contour.shape.onDepthRatio, 2) +
+							"\nRADIUS:  " + ofToString(contour.coordRadius,4) +
+							//"\nRECTSIDE:\t" + ofToString(contour.rectMaxSide,4) +
+							"\nBOXY:   "+ ofToString(contour.shape.boxiness,4);
+							*/
+		ofSetColor(0);
+		ofDrawBitmapString(debugString, contour.circlePosition + ofVec2f(contour.circleRadius,contour.circleRadius));
+		ofSetColor(255);
+		ofDrawBitmapString(debugString, contour.circlePosition + ofVec2f(contour.circleRadius-.2,contour.circleRadius+.2));
+	}
+	ofPopStyle();
 }
 
 void ShapeDetector::findShapes(){

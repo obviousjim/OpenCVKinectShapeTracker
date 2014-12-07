@@ -88,6 +88,8 @@ class ShapeDetector
 	int depthImageHeight;
 
 	void drawDebug(bool zoom);
+	void drawContour(ShapeContour& contour, bool showStats);
+
 	//updates the current list of contours based on any changes to the filter settings
 	void revalidateContours();
 
