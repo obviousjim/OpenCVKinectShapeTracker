@@ -8,10 +8,11 @@
 #include "ofxImageSegmentation.h"
 
 //TODO 
-//-- show stats of contours
-//-- auto zoom when showing just one contour
-//-- show zoom rectangle when showing all contours
-//-- add instructions to interface
+//-- create 3D preview
+
+//-- add readme
+//-- add instructions and labels to interface
+//-- add comments and credits
 
 //OPTIMIZATIONS
 //-- optimize kinect
@@ -25,7 +26,9 @@ class ShapeContour {
 		circleRadius = 0;
 		rectMaxSide = 0;
 		compactness = false;
-		depthPosition = false;
+		maxDepthPosition = 0;
+		minDepthPosition = 0;
+		averageDepthPosition = 0;	
 	}
 
 	bool valid;
@@ -43,8 +46,13 @@ class ShapeContour {
 	float circleRadius;
 	float rectMaxSide;
 
+	//circley-ness
 	float compactness;
-	float depthPosition;
+
+	//3D position of the object
+	unsigned short maxDepthPosition;
+	unsigned short minDepthPosition;
+	unsigned short averageDepthPosition;
 };
 
 class ShapeDetector

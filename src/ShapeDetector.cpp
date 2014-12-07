@@ -128,6 +128,14 @@ void ShapeDetector::drawDebug(bool zoom){
 		if(currentSelectedContour >= 0 && currentSelectedContour < validContours.size()){
 			drawContour(contours[validContours[currentSelectedContour]], previewStats);
 		}
+		ofPushStyle();
+		ofEnableAlphaBlending();
+		ofSetColor(255,40);
+		//draw an onion skin to hint the rest of the image
+		if(segmentedColorFrame.isAllocated()){
+			segmentedColorFrame.draw(0,0);
+		}
+		ofPopStyle();
 	}
 
 	ofPopMatrix();
@@ -141,10 +149,11 @@ void ShapeDetector::drawDebug(bool zoom){
 void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
 
 	ofPushStyle();
-	ofSetColor(ofColor::blueSteel);
+	ofSetColor(ofColor::darkRed);
 
 	contour.contour.draw();	
-	
+
+	//visualize different fitting options
 	if(previewCircleFit){
 		ofNoFill();
 		ofSetColor(0,0,255);
@@ -163,7 +172,8 @@ void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
 		m.setMode(OF_PRIMITIVE_LINE_LOOP);
 		m.draw();
 	}
-				
+	
+
 	if(previewRectFit){
 		ofSetColor(0,100,255);
 		ofMesh m;
@@ -178,14 +188,12 @@ void ShapeDetector::drawContour(ShapeContour& contour, bool showStats){
 	}
 
 	if(showStats){
-		//string debugString; = "TEST";
-		
 		stringstream posstr;
 		posstr << contour.contour.getCentroid2D();
 		string debugString = "SEGMENT " + ofToString(contour.segmentIndex) +
 							"\nPOSITION: " + posstr.str() +
+							"\nDEPTH:    [" + ofToString(contour.minDepthPosition) + ", "  + ofToString(contour.averageDepthPosition) + ", " + ofToString(contour.maxDepthPosition) + "]" +
 							"\nAREA:     " + ofToString(contour.contourArea) +
-//TODO DEPTH:				"\nDEPTH:  " + ofToString(contour.depthPosition) +
 							"\nCOMPACT:  " + ofToString(contour.compactness,4);
 							
 		ofSetColor(0);
@@ -216,27 +224,23 @@ void ShapeDetector::findShapes(){
 
 		ShapeContour& contour = contours[segment];
 		contour.segmentIndex = segment;
+
 		ofxCv::ContourFinder contourFinder;
-		cv::Point2f minCircleCenter;
-		float minCircleRadius;
-		contourFinder.setAutoThreshold(false);
-		//contourFinder.setMinArea(minArea);
-		//contourFinder.setMaxArea(maxArea);
-		ofPixels mask = imageSegmentation.getSegmentMask(segment);
-		cv::Mat cvmask = ofxCv::toCv(mask);
+		contourFinder.setAutoThreshold(false);		
+		cv::Mat cvmask = ofxCv::toCv(imageSegmentation.getSegmentMask(segment));
 		contourFinder.findContours(cvmask);
 
+		//if the min size filtered out this contour then just move on
 		if(contourFinder.getContours().size() == 0){
-			ofLogError("ShapeDetector::findShapes") << "No contours in segment";
 			continue;
 		}
 
+		//the image segmentation should ensure that only one contour is found per segment
 		if(contourFinder.getContours().size() > 1){
 			ofLogError("ShapeDetector::findShapes") << "Multiple contours in segment. only looking at first";
 		}
-		
-		//ofxCv::invert( cvmask );
 
+		//copy the segments into the shape, masking the rest of the image to black
 		contour.segmentedColorImage.allocate(depthImageWidth,depthImageHeight,OF_IMAGE_COLOR);
 		contour.segmentedColorImage.getPixelsRef().set(0);
 		ofxCv::toCv(segmentedColorFrame).copyTo( ofxCv::toCv(contour.segmentedColorImage), cvmask ); 
@@ -247,86 +251,64 @@ void ShapeDetector::findShapes(){
 		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo( ofxCv::toCv(contour.segmentedDepthImage), cvmask ); 
 		contour.segmentedDepthImage.update();
 
+		//copy the contour's basic data from OpenCV
 		contour.contour = contourFinder.getPolyline(0);
 		contour.contourArea = contourFinder.getContourArea(0);
 		contour.boundingRect = contourFinder.getBoundingRect(0);
 				
 		//what is the min circle we can draw around the contour?
+		float minCircleRadius;
+		cv::Point2f minCircleCenter;
 		cv::minEnclosingCircle(cv::Mat(contourFinder.getContour(0)),minCircleCenter,minCircleRadius);
 		contour.circlePosition = ofxCv::toOf(minCircleCenter);
 		contour.circleRadius = minCircleRadius;
+
+		//fit a rotated rectangle
 		contour.fitRect = cv::minAreaRect( cv::Mat(contourFinder.getContour(0)) );
-		//contour.fitRect.size.width  *= .85;
-		//contour.fitRect.size.height *= .85;
-		
+		//nice to know what is the longest side of the rectangle
 		contour.rectMaxSide = MAX(contour.fitRect.size.width,contour.fitRect.size.height);
 
-		//fit an elipse to the contour to compare the to the actual edge
+		//fit an elipse to the contour too. slightly varies from the rectangle fit
 		if(contourFinder.getContour(0).size() > 5){
 			contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(0)) );
 		}
+
+		//compactness is a means to determine circle like objects
+		//a perfect circle has a compactness of 1, and a contour with no area has compactness of 0
 		//http://en.wikipedia.org/wiki/Isoperimetric_inequality
-		//(4*pi*A)/(L*L) 
 		float L = contour.contour.getPerimeter();
 		float A = contour.contourArea;
 		contour.compactness = 4 * PI * A / (L*L);
-		cout << "compactness is " << contour.compactness << endl;
 
+		//iterate through the depth image to find the scope of the depth of the object
+		contour.minDepthPosition = USHRT_MAX;
+		ofRectangle boundingRect = ofxCv::toOf(contour.boundingRect);
+		int totalDepth = 0;
+		int samplesInTotal = 0;
+		for(int y = boundingRect.getMinY(); y < boundingRect.getMaxY(); y++){
+			for(int x = boundingRect.getMinX(); x < boundingRect.getMaxX(); x++){
+				//only if it's in the contour...
+				if(contour.contour.inside(x,y)){
+					int pixelIndex = kinect.getRawDepthPixelsRef().getPixelIndex(x,y);
+					unsigned short depthValue = kinect.getRawDepthPixelsRef().getPixels()[pixelIndex];
+					if(depthValue != 0){
+						contour.minDepthPosition = MIN(contour.minDepthPosition, depthValue);
+						contour.maxDepthPosition = MAX(contour.maxDepthPosition, depthValue);
+						totalDepth += depthValue;
+						samplesInTotal++;
+					}
+				}
+			}
+		}
+		//compute the average
+		if(samplesInTotal != 0){
+			contour.averageDepthPosition = totalDepth / samplesInTotal;
+		}
 	}
 
 	revalidateContours();
 
 	////////////////////////////////////////////////////////////////////
-	/*
-	//FIND SHAPES
-	for(int shapeColor = 0; shapeColor < SHAPE_COLOR_COUNT; shapeColor++){
- 
-		colorDepthCompositeMask[shapeColor].getPixelsRef().set(0);
-
-		//copy in the colors over the back scene
-		ofxCv::toCv(kinect.getRawDepthPixelsRef()).copyTo(ofxCv::toCv(colorDepthCompositeMask[shapeColor]), ofxCv::toCv(colorMasks[shapeColor]));		
-		//getPixelRange(colorDepthCompositeMask[ShapeColor].getPixelsRef(), minScanDistance, maxScanDistance, curPix);
-		ofxCv::toCv(colorDepthCompositeMask[shapeColor]).convertTo(ofxCv::toCv(contourPix), CV_8U);
-
-		colorDepthCompositeMask[shapeColor].update();
-
-		ofxCv::ContourFinder contourFinder;
-		cv::Point2f minCircleCenter;
-		float minCircleRadius;
-
-		contourFinder.setAutoThreshold(false);
-		contourFinder.setMinArea(minArea);
-
-		contourFinder.findContours(contourPix);
-		for(int i = 0; i < contourFinder.getContours().size(); i++){
-			ShapeContour contour;
-			contour.color = shapeColor;
-
-			contour.contour = contourFinder.getPolyline(i);
-			contour.contourArea = contourFinder.getContourArea(i);
-			contour.boundingRect = contourFinder.getBoundingRect(i);
-				
-			//what is the min circle we can draw around the contour?
-			cv::minEnclosingCircle(cv::Mat(contourFinder.getContour(i)),minCircleCenter,minCircleRadius);
-			contour.circlePosition = ofxCv::toOf(minCircleCenter);
-			contour.circleRadius = minCircleRadius * .85;
-			contour.fitRect = cv::minAreaRect( cv::Mat(contourFinder.getContour(i)) );
-			contour.fitRect.size.width  *= .85;
-			contour.fitRect.size.height *= .85;
-				
-			contour.rectMaxSide = MAX(contour.fitRect.size.width,contour.fitRect.size.height);
-
-			//fit an elipse to the contour to compare the to the actual edge
-			if(contourFinder.getContour(i).size() > 5){
-				contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(i)) );
-			}
-
-			//TODO: consider "compactness"
-			contours.push_back(contour);
-		}
-	}
-	*/
-
 	cout << "FOUND " << contours.size() << " CONTOURS" << endl;
 
 	/*
@@ -508,13 +490,14 @@ void ShapeDetector::findShapes(){
 	*/
 }
 
-//right clicking inside of the main window will zoom you in on the right side
+//clicking inside of the captured window will zoom you in on the right side
 void ShapeDetector::mousePressed(ofMouseEventArgs& args){
 	
 	ofVec2f samplePoint(args.x,args.y);
-	ofRectangle colorWindow(0, 0, segmentedColorFrame.getWidth(), segmentedColorFrame.getHeight());
+	ofRectangle colorWindow(0, depthImageHeight, depthImageWidth, depthImageHeight);
 
 	if(colorWindow.inside(samplePoint)){
+		samplePoint.y -= depthImageHeight; //normalize to top left;
 		zoomPoint = samplePoint - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
 	}
 }
@@ -525,8 +508,9 @@ void ShapeDetector::mouseReleased(ofMouseEventArgs& args){}
 
 void ShapeDetector::keyPressed(ofKeyEventArgs& args){
 	
-	if(validContours.size() == 0) return;
-
+	if(showAllContours || validContours.size() == 0) return;
+	
+	int oldSelection = currentSelectedContour;
 	//decrement to the previous one, wrapping
 	if(args.key == OF_KEY_LEFT){
 		currentSelectedContour--;
@@ -547,6 +531,9 @@ void ShapeDetector::keyPressed(ofKeyEventArgs& args){
 		currentSelectedContour = 0;
 	}
 
+	if(oldSelection != currentSelectedContour){
+		zoomPoint = contours[ validContours[currentSelectedContour] ].contour.getCentroid2D() - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
+	}
 }
 
 void ShapeDetector::keyReleased(ofKeyEventArgs& args){

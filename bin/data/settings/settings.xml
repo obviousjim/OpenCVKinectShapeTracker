@@ -8,22 +8,22 @@
 <Widget>
     <Kind>4</Kind>
     <Name>MIN AREA</Name>
-    <Value>54.687500000</Value>
+    <Value>62.500000000</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
     <Name>MAX AREA</Name>
-    <Value>4973.958496094</Value>
+    <Value>4869.791503906</Value>
 </Widget>
 <Widget>
     <Kind>4</Kind>
     <Name>MIN COMPACTNESS</Name>
-    <Value>0.593750000</Value>
+    <Value>0.639374971</Value>
 </Widget>
 <Widget>
     <Kind>2</Kind>
     <Name>SHOW ALL CONTOURS</Name>
-    <Value>1</Value>
+    <Value>0</Value>
 </Widget>
 <Widget>
     <Kind>2</Kind>
