@@ -23,6 +23,7 @@ void ShapeDetector::setup(){
 	gui->addSlider("MIN COMPACTNESS", 0, 1.0, &minCompactness);
 
 	gui->addLabel("PREVIEW OPTIONS");
+	gui->addToggle("SHOW ALL CONTOURS", &showAllContours);
 	gui->addToggle("PREVIEW ELLIPSE",&previewEllipseFit);
 	gui->addToggle("PREVIEW RECT",&previewRectFit);
 	gui->addToggle("PREVIEW CIRCLE", &previewCircleFit);
@@ -42,6 +43,8 @@ void ShapeDetector::update(){
 		kinect.mapDepthToColor(depthColors.getPixelsRef());
 		depthColors.update();
 	}
+
+	revalidateContours();
 }
 
 //--------------------------------------------------------------
@@ -51,8 +54,9 @@ void ShapeDetector::revalidateContours(){
 		contours[i].valid = 
 			contours[i].segmentedColorImage.isAllocated() &&
 			contours[i].segmentedDepthImage.isAllocated() &&
-			contours[i].contourArea > minArea && contours[i].contourArea < maxArea  &&
-			contours[i].compactness > minCompactness;
+			contours[i].contourArea > minArea && contours[i].contourArea < maxArea;//  &&
+			//todo add compactness
+			//contours[i].compactness > minCompactness;
 
 		//update the list of valid contours
 		if(contours[i].valid){
@@ -61,17 +65,26 @@ void ShapeDetector::revalidateContours(){
 	}
 	
 	if(currentSelectedContour >= validContours.size()){
-		currentSelectedContour  = validContours.size()-1;
+		currentSelectedContour = validContours.size()-1;
 	}
+
 }
 
 //--------------------------------------------------------------
 void ShapeDetector::draw(){
-	drawDebug(false);
-	drawDebug(true);
 
+	//draw the full zoomed out left panel
+	drawDebug(false);
+	//then draw a detail view into zoomFbo
+	drawDebug(true);
+	//... and show it one panel over
 	zoomFbo.draw(depthImageWidth,0);
-	segmentedDepthColors.draw(depthImageWidth,depthImageWidth);
+	//and also draw the segmented image below
+	segmentedDepthColors.draw(0,depthImageWidth);
+	//draw the extracted color portion
+	if(!showAllContours && currentSelectedContour != -1){
+		contours[ validContours[currentSelectedContour] ].segmentedColorImage.draw(depthImageWidth,depthImageHeight);
+	}
 }
 
 void ShapeDetector::drawDebug(bool zoom){
@@ -89,14 +102,14 @@ void ShapeDetector::drawDebug(bool zoom){
 	}
 
 	if(showAllContours){
-		for(int i = 0; i < contours.size(); i++){
-			if(contours[i].valid) 
-				drawContour(contours[i], previewStats && zoom);
+		for(int i = 0; i < validContours.size(); i++){
+			drawContour(contours[ validContours[i] ], previewStats && zoom);
+			
 		}
 	}
 	else{
-		if(currentSelectedContour > 0 && currentSelectedContour < contours.size()){
-			drawContour(contours[currentSelectedContour], previewStats);
+		if(currentSelectedContour > 0 && currentSelectedContour < validContours.size()){
+			drawContour(contours[validContours[currentSelectedContour]], previewStats);
 		}
 	}
 
@@ -225,6 +238,8 @@ void ShapeDetector::findShapes(){
 			contour.fitEllipse = cv::fitEllipse( cv::Mat(contourFinder.getContour(0)) );
 		}
 		//TODO: consider "compactness"
+		//http://en.wikipedia.org/wiki/Isoperimetric_inequality
+		//(4*pi*A)/(L*L) 
 	}
 
 	revalidateContours();
@@ -461,31 +476,43 @@ void ShapeDetector::findShapes(){
 	*/
 }
 
-
-void ShapeDetector::mouseMoved(ofMouseEventArgs& args){}
-void ShapeDetector::mouseDragged(ofMouseEventArgs& args){}
-
+//right clicking inside of the main window will zoom you in on the right side
 void ShapeDetector::mousePressed(ofMouseEventArgs& args){
 	
 	ofVec2f samplePoint(args.x,args.y);
 	ofRectangle colorWindow(0, 0, depthColors.getWidth(), depthColors.getHeight());
-	ofRectangle zoomWindow(depthColors.getWidth(), 0, depthColors.getWidth(), depthColors.getHeight());
 
 	if(colorWindow.inside(samplePoint)){
 		zoomPoint = samplePoint - ofVec2f( (zoomFbo.getWidth() / 5.0)  / 2.0, (zoomFbo.getHeight() / 5.0) / 2.0);
 	}
 }
 
+void ShapeDetector::mouseMoved(ofMouseEventArgs& args){}
+void ShapeDetector::mouseDragged(ofMouseEventArgs& args){}
 void ShapeDetector::mouseReleased(ofMouseEventArgs& args){}
 
 void ShapeDetector::keyPressed(ofKeyEventArgs& args){
+	
+	if(validContours.size() == 0) return;
+
+	//decrement to the previous one, wrapping
 	if(args.key == OF_KEY_LEFT){
+		currentSelectedContour--;
+		if(currentSelectedContour < 0){
+			currentSelectedContour = validContours.size()-1;
+		}
 	}
+	//increment to the next one, wrapping
 	if(args.key == OF_KEY_RIGHT){
+		currentSelectedContour = (currentSelectedContour + 1) % validContours.size();
 	}
+	//go to the end
 	if(args.key == OF_KEY_DOWN){
+		currentSelectedContour = validContours.size()-1;
 	}
+	//go to the beginning
 	if(args.key == OF_KEY_UP){
+		currentSelectedContour = 0;
 	}
 
 }
